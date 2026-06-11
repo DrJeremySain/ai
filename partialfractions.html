@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Partial Fractions - Greenwood College</title>
+    <!-- Tailwind CSS for modern layout utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for rendering gorgeous math equations -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es6/tex-mml-chtml.js"></script>
+    
+    <style>
+        /* Custom Forest Green & Premium Theme Variables */
+        :root {
+            --forest-green-dark: #1b4332;
+            --forest-green-medium: #2d6a4f;
+            --forest-green-light: #40916c;
+            --forest-green-pale: #d8f3dc;
+            --cream-bg: #f4f9f4;
+        }
+
+        body {
+            background-color: #ffffff;
+            color: #1a3322;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .bg-forest-dark { background-color: var(--forest-green-dark); }
+        .bg-forest-medium { background-color: var(--forest-green-medium); }
+        .bg-forest-pale { background-color: var(--forest-green-pale); }
+        .text-forest-dark { color: var(--forest-green-dark); }
+        .text-forest-medium { color: var(--forest-green-medium); }
+        .border-forest-medium { border-color: var(--forest-green-medium); }
+        .focus-forest:focus {
+            outline: none;
+            border-color: var(--forest-green-medium);
+            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.2);
+        }
+
+        /* Smooth tab transition styling */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Customize scrollbars to match theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--forest-green-light);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--forest-green-dark);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-forest-dark text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <!-- Gray Bulldog Mascot Icon SVG -->
+                <div class="w-16 h-16 bg-gray-300 rounded-full border-2 border-white p-1 flex items-center justify-center shadow-md hover:scale-105 transition-transform duration-300" title="Meet Prof. Bruiser!">
+                    <svg viewBox="0 0 100 100" class="w-full h-full text-gray-700">
+                        <!-- Head -->
+                        <path d="M25,45 C25,25 75,25 75,45 C75,65 25,65 25,45 Z" fill="#888888" />
+                        <!-- Ears -->
+                        <path d="M22,30 L10,15 L32,25 Z" fill="#666666" stroke="#444444" stroke-width="2" />
+                        <path d="M78,30 L90,15 L68,25 Z" fill="#666666" stroke="#444444" stroke-width="2" />
+                        <!-- Jowls / Muzzle -->
+                        <path d="M35,55 C35,75 65,75 65,55 C65,50 35,50 35,55 Z" fill="#aaaaaa" />
+                        <!-- Nose -->
+                        <path d="M45,52 L55,52 L50,60 Z" fill="#222222" />
+                        <!-- Eyes & Eyebrows -->
+                        <ellipse cx="40" cy="40" rx="4" ry="6" fill="#111111" />
+                        <ellipse cx="60" cy="40" rx="4" ry="6" fill="#111111" />
+                        <path d="M35,32 Q40,28 45,34" stroke="#222222" stroke-width="3" fill="none" />
+                        <path d="M65,32 Q60,28 55,34" stroke="#222222" stroke-width="3" fill="none" />
+                        <!-- Underbite teeth -->
+                        <polygon points="42,65 45,58 48,65" fill="#ffffff" />
+                        <polygon points="58,65 55,58 52,65" fill="#ffffff" />
+                        <!-- Spike Collar (Forest Green!) -->
+                        <path d="M28,62 Q50,75 72,62 L74,68 Q50,81 26,68 Z" fill="#2d6a4f" />
+                        <polygon points="35,68 37,74 41,69" fill="#dddddd" />
+                        <polygon points="50,72 50,80 50,72" fill="#dddddd" />
+                        <polygon points="65,68 63,74 59,69" fill="#dddddd" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight">College Algebra Lab</h1>
+                    <p class="text-xs text-emerald-200">Greenwood Community College • Prof. Bruiser's Corner</p>
+                </div>
+            </div>
+            <div class="hidden md:flex space-x-2 text-sm bg-emerald-900 bg-opacity-40 p-2 rounded-lg">
+                <span class="font-semibold text-emerald-300">Class:</span>
+                <span>MATH 1314 - Freshmen Prep</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mascot Welcome / Professor Introduction Bar -->
+    <div class="bg-forest-pale border-b border-emerald-200 py-4 px-4 shadow-inner">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4">
+            <span class="text-4xl">🐾</span>
+            <div class="text-center md:text-left">
+                <h2 class="font-bold text-forest-dark text-lg">Hey there, future mathematicians! I'm Professor Bruiser.</h2>
+                <p class="text-sm text-forest-medium">
+                    Don't let the word "Partial Fractions" drool on your shoes! We're breaking down complicated fractions into friendly, chewable bits. Use the interactive tabs below to discover the magic.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Navigation Tabs -->
+    <div class="bg-white border-b border-gray-200 sticky top-[88px] z-40 shadow-sm">
+        <div class="max-w-4xl mx-auto flex justify-around">
+            <button onclick="switchTab('intro')" id="tab-intro" class="w-full py-4 text-center border-b-2 border-forest-medium text-forest-dark font-semibold focus:outline-none transition-all duration-200 hover:bg-emerald-50">
+                1. The Big Idea
+            </button>
+            <button onclick="switchTab('lab')" id="tab-lab" class="w-full py-4 text-center border-b-2 border-transparent text-gray-500 font-semibold focus:outline-none transition-all duration-200 hover:bg-emerald-50">
+                2. Live Equation Sandbox
+            </button>
+            <button onclick="switchTab('quiz')" id="tab-quiz" class="w-full py-4 text-center border-b-2 border-transparent text-gray-500 font-semibold focus:outline-none transition-all duration-200 hover:bg-emerald-50">
+                3. Bite-Sized Practice
+            </button>
+            <button onclick="switchTab('ai')" id="tab-ai" class="w-full py-4 text-center border-b-2 border-transparent text-gray-500 font-semibold focus:outline-none transition-all duration-200 hover:bg-emerald-50 flex items-center justify-center space-x-1">
+                <span>4. Ask Bruiser AI</span>
+                <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">LIVE</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE WORKSPACE -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 md:p-6">
+
+        <!-- ================= TAB 1: THE BIG IDEA ================= -->
+        <section id="content-intro" class="tab-content active space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+                <span class="bg-emerald-100 text-forest-dark text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Phase 1: Reverse Engineering Fractions</span>
+                <h3 class="text-2xl font-bold text-forest-dark mt-2 mb-4">Let's Play "Un-Adding" Fractions!</h3>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    In basic math, you learned how to combine two separate fractions into one single super-fraction by finding a <strong>Common Denominator</strong>. For example:
+                </p>
+
+                <!-- Dynamic Adding Tool -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-gray-200 my-6 text-center">
+                    <h4 class="font-semibold text-forest-medium mb-3">Adding Fractions Together (Forward direction)</h4>
+                    <div class="flex flex-wrap justify-center items-center gap-4 text-xl font-mono">
+                        <div class="flex flex-col items-center">
+                            <span>1</span>
+                            <div class="w-12 h-0.5 bg-black"></div>
+                            <span>x - 2</span>
+                        </div>
+                        <span class="text-2xl text-forest-medium font-bold">+</span>
+                        <div class="flex flex-col items-center">
+                            <span>3</span>
+                            <div class="w-12 h-0.5 bg-black"></div>
+                            <span>x + 1</span>
+                        </div>
+                        <span class="text-2xl text-gray-400">=</span>
+                        <div class="flex flex-col items-center bg-emerald-100 p-2 rounded-lg border border-emerald-300">
+                            <span>1(x + 1) + 3(x - 2)</span>
+                            <div class="w-48 h-0.5 bg-black"></div>
+                            <span>(x - 2)(x + 1)</span>
+                        </div>
+                        <span class="text-2xl text-gray-400">=</span>
+                        <div class="flex flex-col items-center bg-emerald-200 p-2 rounded-lg border border-emerald-400 font-bold">
+                            <span>4x - 5</span>
+                            <div class="w-32 h-0.5 bg-black"></div>
+                            <span>x² - x - 2</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">This is comfortable! But what if we started on the right and had to find the left?</p>
+                </div>
+
+                <div class="border-l-4 border-forest-medium pl-4 py-1 my-4 bg-emerald-50 rounded-r-lg">
+                    <p class="text-gray-800 font-medium">
+                        <strong>The Goal of Partial Fractions:</strong> We start with a heavy, complex fraction like $\frac{4x - 5}{x^2 - x - 2}$ and "decompose" (un-add) it back into simpler, "partial" fractions: $\frac{1}{x-2} + \frac{3}{x+1}$.
+                    </p>
+                </div>
+
+                <h4 class="font-bold text-lg text-forest-dark mt-6 mb-2">Why do we care?</h4>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    In Calculus and engineering, handling a monster polynomial fraction as a single unit is incredibly painful. Breaking it down into separate baby fractions makes integration, limits, and modeling extremely easy! It's like taking a complex engine apart into simple, clean gears.
+                </p>
+
+                <!-- Interactive Analogy Puzzle -->
+                <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mt-6">
+                    <h5 class="font-bold text-forest-medium mb-2 flex items-center">
+                        <span class="mr-2">💡</span> Let's build an intuition: Denominator Factoring
+                    </h5>
+                    <p class="text-sm text-gray-700 mb-4">
+                        To crack open the denominator, we must factor it first. Test your skills on this denominator. Factoring $x^2 + x - 6$ yields what two baby linear factors?
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="checkAnalogy(1, this)" class="bg-white hover:bg-forest-pale border border-gray-200 p-3 rounded-lg text-sm font-semibold transition-all text-center">
+                            $(x - 3)(x + 2)$
+                        </button>
+                        <button onclick="checkAnalogy(2, this)" class="bg-white hover:bg-forest-pale border border-gray-200 p-3 rounded-lg text-sm font-semibold transition-all text-center">
+                            $(x + 3)(x - 2)$
+                        </button>
+                        <button onclick="checkAnalogy(3, this)" class="bg-white hover:bg-forest-pale border border-gray-200 p-3 rounded-lg text-sm font-semibold transition-all text-center">
+                            $(x - 6)(x + 1)$
+                        </button>
+                    </div>
+                    <div id="analogy-feedback" class="mt-3 text-sm hidden font-semibold"></div>
+                </div>
+            </div>
+
+            <!-- Card for Linear Setup Process -->
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+                <h3 class="text-xl font-bold text-forest-dark mb-4">The Standard Setup (For Distinct Linear Factors)</h3>
+                <p class="text-gray-700 mb-4">
+                    Whenever your factored denominator has simple, distinct terms like $(x - a)(x - b)$, we assume there are some mystery constants (let's call them $A$ and $B$) sitting on top of them:
+                </p>
+                <div class="bg-slate-50 p-4 rounded-xl font-mono text-center text-lg my-4">
+                    $$\frac{Px + Q}{(x-a)(x-b)} = \frac{A}{x-a} + \frac{B}{x-b}$$
+                </div>
+                <p class="text-gray-700 mb-4">
+                    Our entire mission is to solve for $A$ and $B$. Let's jump into the interactive lab next to see how we do that step-by-step with any numbers you choose!
+                </p>
+                <div class="text-center">
+                    <button onclick="switchTab('lab')" class="bg-forest-medium text-white px-6 py-3 rounded-xl font-semibold hover:bg-forest-dark transform hover:-translate-y-0.5 transition-all shadow-md">
+                        Let's Try It in the Sandbox →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: LIVE EQUATION SANDBOX ================= -->
+        <section id="content-lab" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+                <span class="bg-emerald-100 text-forest-dark text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Phase 2: Play and Observe</span>
+                <h3 class="text-2xl font-bold text-forest-dark mt-2 mb-2">Step-by-Step Solver Sandbox</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Change the values below using the sliders to see exactly how we set up, solve, and reconstruct a partial fraction in real-time.
+                </p>
+
+                <!-- Sandbox Controls -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Numerator Coefficient P ($Px$)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="param-P" min="-10" max="10" value="3" class="w-full accent-emerald-700" oninput="updateSandbox()">
+                            <span id="val-P" class="font-mono font-bold text-forest-dark w-8 text-right">3</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Numerator Constant Q</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="param-Q" min="-15" max="15" value="1" class="w-full accent-emerald-700" oninput="updateSandbox()">
+                            <span id="val-Q" class="font-mono font-bold text-forest-dark w-8 text-right">1</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Denominator Root 1 (r₁)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="param-r1" min="-5" max="5" value="3" class="w-full accent-emerald-700" oninput="updateSandbox()">
+                            <span id="val-r1" class="font-mono font-bold text-forest-dark w-8 text-right">3</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">This produces factors $(x - r_1)$</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Denominator Root 2 (r₂)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="param-r2" min="-5" max="5" value="-2" class="w-full accent-emerald-700" oninput="updateSandbox()">
+                            <span id="val-r2" class="font-mono font-bold text-forest-dark w-8 text-right">-2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equation View Board -->
+                <div class="bg-forest-dark text-white p-6 rounded-xl text-center space-y-4 relative overflow-hidden shadow-inner">
+                    <div class="absolute top-0 right-0 p-2 opacity-10 font-bold text-6xl select-none">MATH</div>
+                    <p class="text-xs uppercase tracking-widest text-emerald-300 font-bold">Your Target Equation</p>
+                    <div id="target-equation-display" class="text-xl md:text-2xl font-mono py-2">
+                        $$\frac{3x + 1}{(x - 3)(x + 2)}$$
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Construction Layout -->
+                <div class="mt-8 space-y-6">
+                    <!-- Step 1 Card -->
+                    <div class="border-l-4 border-emerald-500 bg-white p-5 rounded-r-xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-forest-dark text-lg flex items-center">
+                            <span class="bg-emerald-100 text-forest-dark rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">1</span>
+                            Set up the Equation
+                        </h4>
+                        <p class="text-sm text-gray-600 my-2">
+                            We assume that our target fraction can be written as a sum of two simple terms with mystery numerators $A$ and $B$:
+                        </p>
+                        <div id="step-1-math" class="bg-slate-50 p-3 rounded font-mono text-center">
+                            $$\frac{3x + 1}{(x - 3)(x + 2)} = \frac{A}{x - 3} + \frac{B}{x + 2}$$
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Card -->
+                    <div class="border-l-4 border-emerald-500 bg-white p-5 rounded-r-xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-forest-dark text-lg flex items-center">
+                            <span class="bg-emerald-100 text-forest-dark rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">2</span>
+                            "Clear" the Denominators
+                        </h4>
+                        <p class="text-sm text-gray-600 my-2">
+                            Multiply the entire equation by the common denominator $(x - r_1)(x - r_2)$ to get rid of all fractions. Watch how the denominators cancel out:
+                        </p>
+                        <div id="step-2-math" class="bg-slate-50 p-3 rounded font-mono text-center">
+                            $$3x + 1 = A(x + 2) + B(x - 3)$$
+                        </div>
+                    </div>
+
+                    <!-- Step 3 Card -->
+                    <div class="border-l-4 border-emerald-500 bg-white p-5 rounded-r-xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-forest-dark text-lg flex items-center">
+                            <span class="bg-emerald-100 text-forest-dark rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">3</span>
+                            Solve for A (Eliminate B)
+                        </h4>
+                        <p class="text-sm text-gray-600 my-2">
+                            We want $B$ to disappear! To make $B(x - r_1) = 0$, let's intelligently choose <strong id="step-3-x-val">x = 3</strong>:
+                        </p>
+                        <div id="step-3-math" class="bg-slate-50 p-4 rounded font-mono text-sm space-y-2">
+                            <div>Substitute: $3(3) + 1 = A(3 + 2) + B(3 - 3)$</div>
+                            <div class="font-bold text-forest-medium">Simplify: $10 = 5A \implies A = 2$</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 Card -->
+                    <div class="border-l-4 border-emerald-500 bg-white p-5 rounded-r-xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-forest-dark text-lg flex items-center">
+                            <span class="bg-emerald-100 text-forest-dark rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">4</span>
+                            Solve for B (Eliminate A)
+                        </h4>
+                        <p class="text-sm text-gray-600 my-2">
+                            Now make $A$ disappear! To make $A(x - r_2) = 0$, let's intelligently choose <strong id="step-4-x-val">x = -2</strong>:
+                        </p>
+                        <div id="step-4-math" class="bg-slate-50 p-4 rounded font-mono text-sm space-y-2">
+                            <div>Substitute: $3(-2) + 1 = A(-2 + 2) + B(-2 - 3)$</div>
+                            <div class="font-bold text-forest-medium">Simplify: $-5 = -5B \implies B = 1$</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 Card (Victory) -->
+                    <div class="border-l-4 border-forest-medium bg-emerald-50 p-5 rounded-r-xl shadow-sm border border-emerald-100">
+                        <h4 class="font-bold text-forest-dark text-lg flex items-center">
+                            <span class="bg-forest-medium text-white rounded-full w-6 h-6 inline-flex items-center justify-center mr-2 text-sm">5</span>
+                            The Final Decomposed Output!
+                        </h4>
+                        <p class="text-sm text-gray-700 my-2">
+                            Assemble the pieces together with our calculated constants $A$ and $B$:
+                        </p>
+                        <div id="step-5-math" class="bg-white p-4 rounded-xl border border-emerald-200 font-mono text-center text-xl text-forest-dark font-bold">
+                            $$\frac{3x + 1}{(x - 3)(x + 2)} = \frac{2}{x - 3} + \frac{1}{x + 2}$$
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: BITE-SIZED PRACTICE ================= -->
+        <section id="content-quiz" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+                <span class="bg-emerald-100 text-forest-dark text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">Phase 3: Test Your Paw-wer</span>
+                <h3 class="text-2xl font-bold text-forest-dark mt-2 mb-2">Practice Arena</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Solve these conceptual questions to prove you're ready for college-level algebra!
+                </p>
+
+                <!-- Dynamic Quiz Controller -->
+                <div class="space-y-8">
+                    <!-- Q1 -->
+                    <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question 1 of 3</span>
+                        <h4 class="font-bold text-gray-800 text-md mt-1 mb-3">
+                            What is the correct template setup for decomposing the fraction $\frac{5x - 2}{(x - 4)(x + 7)}$?
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button onclick="checkQuiz(1, 0, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                A) $\frac{A}{x - 4} + \frac{B}{x + 7}$
+                            </button>
+                            <button onclick="checkQuiz(1, 1, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                B) $\frac{A}{x - 4} \cdot \frac{B}{x + 7}$
+                            </button>
+                            <button onclick="checkQuiz(1, 2, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                C) $\frac{Ax + B}{(x - 4)(x + 7)}$
+                            </button>
+                            <button onclick="checkQuiz(1, 3, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                D) $\frac{A}{x^2 - 3x - 28}$
+                            </button>
+                        </div>
+                        <div id="quiz-ans-1" class="mt-3 text-sm hidden font-medium"></div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question 2 of 3</span>
+                        <h4 class="font-bold text-gray-800 text-md mt-1 mb-3">
+                            If you have the equation $8x - 3 = A(x - 5) + B(x + 1)$, which value of $x$ would you substitute to isolate and solve for $B$ immediately?
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button onclick="checkQuiz(2, 0, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                A) $x = 0$
+                            </button>
+                            <button onclick="checkQuiz(2, 1, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                B) $x = 5$
+                            </button>
+                            <button onclick="checkQuiz(2, 2, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                C) $x = -1$
+                            </button>
+                            <button onclick="checkQuiz(2, 3, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                D) $x = 3$
+                            </button>
+                        </div>
+                        <div id="quiz-ans-2" class="mt-3 text-sm hidden font-medium"></div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Question 3 of 3</span>
+                        <h4 class="font-bold text-gray-800 text-md mt-1 mb-3">
+                            True or False: If the degree of the numerator is equal to or higher than the denominator (e.g., $\frac{x^2 + 1}{x^2 - 4}$), we can immediately apply the standard template.
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button onclick="checkQuiz(3, 0, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                A) True! Go right ahead.
+                            </button>
+                            <button onclick="checkQuiz(3, 1, this)" class="text-left bg-slate-50 hover:bg-forest-pale p-3 rounded-lg border border-gray-200 transition-colors text-sm">
+                                B) False! We must perform polynomial long division first to make it a proper fraction.
+                            </button>
+                        </div>
+                        <div id="quiz-ans-3" class="mt-3 text-sm hidden font-medium"></div>
+                    </div>
+                </div>
+
+                <!-- Mascot Report Card -->
+                <div class="bg-forest-pale p-6 rounded-xl mt-8 flex flex-col md:flex-row items-center justify-between border border-emerald-200">
+                    <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                        <span class="text-5xl">🏆</span>
+                        <div>
+                            <h4 class="font-bold text-forest-dark">Professor Bruiser's Achievement Tracker</h4>
+                            <p class="text-sm text-forest-medium">Complete all quiz options to earn the Greenwood College Math Badge!</p>
+                        </div>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <div class="text-3xl font-bold text-forest-dark font-mono"><span id="badge-score">0</span> / 3</div>
+                        <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider">Questions Corrected</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: ASK BRUISER AI ================= -->
+        <section id="content-ai" class="tab-content space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col h-[600px]">
+                <div class="border-b border-gray-100 pb-4 flex justify-between items-center">
+                    <div>
+                        <span class="bg-red-100 text-red-700 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">AI Math Companion</span>
+                        <h3 class="text-xl font-bold text-forest-dark mt-2">Chat with Professor Bruiser</h3>
+                    </div>
+                    <!-- Small Status Indicator -->
+                    <div class="flex items-center space-x-2 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                        <span>Prof. Online</span>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Screen -->
+                <div id="chat-messages" class="flex-grow overflow-y-auto p-4 space-y-4 bg-slate-50 rounded-xl my-4 border border-gray-100 text-sm">
+                    <!-- Default Mascot Message -->
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full p-0.5 flex-shrink-0">
+                            <svg viewBox="0 0 100 100" class="w-full h-full text-gray-700">
+                                <path d="M25,45 C25,25 75,25 75,45 C75,65 25,65 25,45 Z" fill="#888888" />
+                                <ellipse cx="40" cy="40" rx="4" ry="6" fill="#111111" />
+                                <ellipse cx="60" cy="40" rx="4" ry="6" fill="#111111" />
+                                <path d="M45,52 L55,52 L50,60 Z" fill="#222222" />
+                            </svg>
+                        </div>
+                        <div class="bg-white border border-gray-200 p-3.5 rounded-r-xl rounded-bl-xl max-w-[80%] shadow-sm">
+                            <p class="font-bold text-xs text-forest-dark mb-1">Professor Bruiser</p>
+                            <p class="text-gray-700 leading-relaxed">
+                                Ruff! Welcome to my tutoring booth! Go ahead and ask me anything about <strong>Partial Fractions</strong>. 
+                            </p>
+                            <p class="text-gray-700 leading-relaxed mt-2">
+                                Ask things like: 
+                                <br>• <em>"What if the factors repeat like $(x-2)^2$?"</em>
+                                <br>• <em>"How does polynomial long division fit in?"</em>
+                                <br>• <em>"Can you explain the Heaviside Cover-up method?"</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Prompt Buttons -->
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <button onclick="quickPrompt('What happens if we have repeated linear factors?')" class="bg-emerald-50 hover:bg-emerald-100 text-forest-medium text-xs font-semibold px-3 py-1.5 rounded-full border border-emerald-200 transition-colors">
+                        ❓ Repeated Factors?
+                    </button>
+                    <button onclick="quickPrompt('Explain the difference between linear and quadratic factors.')')" class="bg-emerald-50 hover:bg-emerald-100 text-forest-medium text-xs font-semibold px-3 py-1.5 rounded-full border border-emerald-200 transition-colors">
+                        ❓ Linear vs Quadratic?
+                    </button>
+                    <button onclick="quickPrompt('Can you give me a real life example of where this is used?')" class="bg-emerald-50 hover:bg-emerald-100 text-forest-medium text-xs font-semibold px-3 py-1.5 rounded-full border border-emerald-200 transition-colors">
+                        ❓ Real-world uses?
+                    </button>
+                </div>
+
+                <!-- Input Interface -->
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="chat-input" placeholder="Type your math question here..." class="flex-grow px-4 py-3 rounded-xl border border-gray-300 focus-forest text-sm" onkeydown="if(event.key==='Enter') sendMessage()">
+                    <button onclick="sendMessage()" class="bg-forest-medium hover:bg-forest-dark text-white px-5 py-3 rounded-xl font-semibold text-sm transition-all shadow-md flex items-center space-x-1">
+                        <span>Send</span>
+                        <span>🐾</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer with College Badging -->
+    <footer class="bg-forest-dark text-white py-6 border-t border-emerald-800 text-center text-sm mt-auto">
+        <div class="max-w-4xl mx-auto px-4 space-y-2">
+            <p class="font-semibold text-emerald-300">Department of Mathematics • Greenwood Community College</p>
+            <p class="text-xs text-emerald-100 opacity-70">Designed for active freshman discovery. Practice often, make mistakes, learn endlessly!</p>
+        </div>
+    </footer>
+
+    <!-- Interactive Script Mechanics -->
+    <script>
+        // Global variables
+        let scoreTracker = { 1: false, 2: false, 3: false };
+
+        // Simple Tab Switcher
+        function switchTab(tabId) {
+            // Remove active classes
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button, header + div + div button').forEach(btn => {
+                btn.classList.remove('border-forest-medium', 'text-forest-dark');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Add active to targeted elements
+            document.getElementById(`content-${tabId}`).classList.add('active');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-forest-medium', 'text-forest-dark');
+
+            // Trigger MathJax render if loading sandbox/lab
+            if (tabId === 'lab' || tabId === 'intro') {
+                setTimeout(() => {
+                    if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+                        MathJax.typesetPromise();
+                    }
+                }, 50);
+            }
+        }
+
+        // Analogy Intuition Checker (Tab 1)
+        function checkAnalogy(option, buttonElement) {
+            const feedback = document.getElementById('analogy-feedback');
+            feedback.classList.remove('hidden');
+            
+            // Remove previous backgrounds
+            const buttons = buttonElement.parentElement.children;
+            for (let btn of buttons) {
+                btn.classList.remove('bg-emerald-200', 'bg-red-100', 'border-emerald-500', 'border-red-500');
+            }
+
+            if (option === 2) { // correct option: (x+3)(x-2)
+                buttonElement.classList.add('bg-emerald-200', 'border-emerald-500');
+                feedback.className = "mt-3 text-sm font-semibold text-emerald-700";
+                feedback.innerHTML = "🐾 Spot on! $(x+3)(x-2) = x^2 - 2x + 3x - 6 = x^2 + x - 6$. We are ready for decomposing!";
+            } else {
+                buttonElement.classList.add('bg-red-100', 'border-red-500');
+                feedback.className = "mt-3 text-sm font-semibold text-red-600";
+                feedback.innerHTML = "Not quite! Try expanding that multiplication to see if it matches $x^2 + x - 6$. Hint: Check the signs of the middle term.";
+            }
+
+            if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+                MathJax.typesetPromise([feedback]);
+            }
+        }
+
+        // Real-Time Sandbox Solver Calculations (Tab 2)
+        function updateSandbox() {
+            // Get current values
+            const P = parseInt(document.getElementById('param-P').value);
+            const Q = parseInt(document.getElementById('param-Q').value);
+            let r1 = parseInt(document.getElementById('param-r1').value);
+            let r2 = parseInt(document.getElementById('param-r2').value);
+
+            // Avoid division by zero/same roots for a cleaner freshman explanation
+            if (r1 === r2) {
+                if (r1 < 5) r2 = r1 + 1;
+                else r2 = r1 - 1;
+                document.getElementById('param-r2').value = r2;
+            }
+
+            // Sync text display values
+            document.getElementById('val-P').innerText = P;
+            document.getElementById('val-Q').innerText = Q;
+            document.getElementById('val-r1').innerText = r1;
+            document.getElementById('val-r2').innerText = r2;
+
+            // Formulating nice looking algebraic expressions
+            const formatTerm = (num, variable = '') => {
+                if (num === 0) return '';
+                if (num === 1 && variable !== '') return variable;
+                if (num === -1 && variable !== '') return '-' + variable;
+                return num + variable;
+            };
+
+            const formatPolynomial = (coeff, constant) => {
+                if (coeff === 0) return `${constant}`;
+                const sign = constant >= 0 ? '+' : '-';
+                const absConst = Math.abs(constant);
+                return `${formatTerm(coeff, 'x')} ${sign} ${absConst}`;
+            };
+
+            const formatFactor = (r) => {
+                if (r === 0) return 'x';
+                const sign = r > 0 ? '-' : '+';
+                return `(x ${sign} ${Math.abs(r)})`;
+            };
+
+            const numText = formatPolynomial(P, Q);
+            const denText = `${formatFactor(r1)}${formatFactor(r2)}`;
+
+            // Let's compute A and B
+            // Standard equation: Px + Q = A(x - r2) + B(x - r1)
+            // If x = r1 => P(r1) + Q = A(r1 - r2) => A = (P*r1 + Q) / (r1 - r2)
+            // If x = r2 => P(r2) + Q = B(r2 - r1) => B = (P*r2 + Q) / (r2 - r1)
+            const A_raw = (P * r1 + Q) / (r1 - r2);
+            const B_raw = (P * r2 + Q) / (r2 - r1);
+
+            // Round nicely for aesthetic display
+            const A = parseFloat(A_raw.toFixed(2));
+            const B = parseFloat(B_raw.toFixed(2));
+
+            // Dynamic MathJax Updates
+            document.getElementById('target-equation-display').innerHTML = `$$\\frac{${numText}}{${denText}}$$`;
+            
+            document.getElementById('step-1-math').innerHTML = `$$\\frac{${numText}}{${denText}} = \\frac{A}{${formatFactor(r1)}} + \\frac{B}{${formatFactor(r2)}}$$`;
+            
+            document.getElementById('step-2-math').innerHTML = `$$${numText} = A${formatFactor(r2)} + B${formatFactor(r1)}$$`;
+
+            document.getElementById('step-3-x-val').innerText = `x = ${r1}`;
+            document.getElementById('step-3-math').innerHTML = `
+                <div>Substitute $x = ${r1}$: &nbsp;&nbsp; $${P}(${r1}) + ${Q >= 0 ? '+' : ''}${Q} = A(${r1} ${r2 >= 0 ? '-' : '+'}${Math.abs(r2)}) + B(${r1} ${r1 >= 0 ? '-' : '+'}${Math.abs(r1)})$</div>
+                <div class="font-bold text-forest-medium">Simplify: &nbsp;&nbsp; ${P * r1 + Q} = ${r1 - r2}A \\implies A = ${A}</div>
+            `;
+
+            document.getElementById('step-4-x-val').innerText = `x = ${r2}`;
+            document.getElementById('step-4-math').innerHTML = `
+                <div>Substitute $x = ${r2}$: &nbsp;&nbsp; $${P}(${r2}) + ${Q >= 0 ? '+' : ''}${Q} = A(${r2} ${r2 >= 0 ? '-' : '+'}${Math.abs(r2)}) + B(${r2} ${r1 >= 0 ? '-' : '+'}${Math.abs(r1)})$</div>
+                <div class="font-bold text-forest-medium">Simplify: &nbsp;&nbsp; ${P * r2 + Q} = ${r2 - r1}B \\implies B = ${B}</div>
+            `;
+
+            // Build reconstructed final sum
+            const bSign = B >= 0 ? '+' : '-';
+            const absB = Math.abs(B);
+            document.getElementById('step-5-math').innerHTML = `
+                $$\\frac{${numText}}{${denText}} = \\frac{${A}}{${formatFactor(r1)}} ${bSign} \\frac{${absB}}{${formatFactor(r2)}}$$
+            `;
+
+            // Render math equations dynamically
+            if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+                MathJax.typesetPromise();
+            }
+        }
+
+        // Quiz Mechanics (Tab 3)
+        function checkQuiz(qNum, optIdx, button) {
+            const ansDiv = document.getElementById(`quiz-ans-${qNum}`);
+            ansDiv.classList.remove('hidden');
+
+            const siblings = button.parentElement.children;
+            for (let b of siblings) {
+                b.classList.remove('bg-emerald-200', 'bg-red-100', 'border-emerald-500', 'border-red-500');
+            }
+
+            if (qNum === 1) {
+                if (optIdx === 0) {
+                    button.classList.add('bg-emerald-200', 'border-emerald-500');
+                    ansDiv.className = "mt-3 text-sm font-semibold text-emerald-700";
+                    ansDiv.innerHTML = "🐾 Correct! Distinct linear terms split into two separate fractional components with simple constant numerators ($A$ and $B$).";
+                    scoreTracker[1] = true;
+                } else {
+                    button.classList.add('bg-red-100', 'border-red-500');
+                    ansDiv.className = "mt-3 text-sm font-semibold text-red-600";
+                    ansDiv.innerHTML = "Woof, try again! We always add distinct linear decomposition components together, and each linear denominator gets a single constant numerator.";
+                }
+            } else if (qNum === 2) {
+                if (optIdx === 1) {
+                    button.classList.add('bg-emerald-200', 'border-emerald-500');
+                    ansDiv.className = "mt-3 text-sm font-semibold text-emerald-700";
+                    ansDiv.innerHTML = "🐾 Correct! Choosing $x = 5$ makes the first factor $(5 - 5) = 0$, completely cancelling the $A$ term and leaving only $B$ to solve for.";
+                    scoreTracker[2] = true;
+                } else {
+                    button.classList.add('bg-red-100', 'border-red-500');
+                    ansDiv.className = "mt-3 text-sm font-semibold text-red-600";
+                    ansDiv.innerHTML = "Think again! Look for the value of $x$ that turns the multiplier of $A$, $(x-5)$, into zero.";
+                }
+            } else if (qNum === 3) {
+                if (optIdx === 1) {
+                    button.classList.add('bg-emerald-200', 'border-emerald-500');
+                    ansDiv.className = "mt-3 text-sm font-semibold text-emerald-700";
+                    ansDiv.innerHTML = "🐾 Correct! If the numerator is 'improper' (degree equal to or greater than the denominator), we must do polynomial division first, then decompose the remainder fraction.";
+                    scoreTracker[3] = true;
+                } else {
+                    button.classList.add('bg-red-100', 'border-red-500');
+                    ansDiv.className = "mt-3 text-sm font-semibold text-red-600";
+                    ansDiv.innerHTML = "Careful! Decomposing only works smoothly on 'proper' rational fractions. We need division first if the top is too heavy.";
+                }
+            }
+
+            // Update badge score
+            const scoreCount = Object.values(scoreTracker).filter(Boolean).length;
+            document.getElementById('badge-score').innerText = scoreCount;
+        }
+
+        // Quick prompt helper for chat
+        function quickPrompt(text) {
+            document.getElementById('chat-input').value = text;
+            sendMessage();
+        }
+
+        // Chat with Prof. Bruiser (Gemini 2.5 Flash API with Exponential Backoff)
+        async function sendMessage() {
+            const inputField = document.getElementById('chat-input');
+            const userText = inputField.value.trim();
+            if (!userText) return;
+
+            // Clear input
+            inputField.value = '';
+
+            // Render User Message in UI
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.insertAdjacentHTML('beforeend', `
+                <div class="flex items-start justify-end space-x-3">
+                    <div class="bg-forest-pale border border-emerald-200 p-3.5 rounded-l-xl rounded-br-xl max-w-[80%] shadow-sm text-right">
+                        <p class="font-bold text-xs text-forest-dark mb-1">You</p>
+                        <p class="text-gray-800 leading-relaxed">${userText}</p>
+                    </div>
+                </div>
+            `);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Add placeholder for AI response
+            const responseId = 'ai-resp-' + Date.now();
+            chatMessages.insertAdjacentHTML('beforeend', `
+                <div class="flex items-start space-x-3" id="${responseId}">
+                    <div class="w-10 h-10 bg-gray-300 rounded-full p-0.5 flex-shrink-0 animate-bounce">
+                        <svg viewBox="0 0 100 100" class="w-full h-full text-gray-700">
+                            <path d="M25,45 C25,25 75,25 75,45 C75,65 25,65 25,45 Z" fill="#888888" />
+                            <ellipse cx="40" cy="40" rx="4" ry="6" fill="#111111" />
+                            <ellipse cx="60" cy="40" rx="4" ry="6" fill="#111111" />
+                            <path d="M45,52 L55,52 L50,60 Z" fill="#222222" />
+                        </svg>
+                    </div>
+                    <div class="bg-white border border-gray-200 p-3.5 rounded-r-xl rounded-bl-xl max-w-[80%] shadow-sm">
+                        <p class="font-bold text-xs text-forest-dark mb-1">Professor Bruiser</p>
+                        <p class="text-gray-500 italic flex items-center space-x-2">
+                            <span>Scratching behind ears and thinking...</span>
+                        </p>
+                    </div>
+                </div>
+            `);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Call Gemini API with Exponential Backoff
+            const apiKey = ""; // Set dynamically by platform at runtime
+            const systemPrompt = `You are Professor Bruiser, a friendly, encouraging, and patient bulldog community college math professor. You are teaching incoming freshmans college algebra, specifically Partial Fraction Decomposition. Use fun puppy/college analogies when explaining concepts. Ensure explanations are highly accessible for complete beginners. Use LaTeX notation ($...$ for inline, $$...$$ for block math equations) to format mathematics beautifully.`;
+
+            let success = false;
+            let resultText = '';
+            let retries = 5;
+            let delay = 1000; // start with 1s
+
+            const payload = {
+                contents: [{ parts: [{ text: userText }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Oops, I lost my chew toy! Can you try asking that again?";
+                        success = true;
+                        break;
+                    }
+                } catch (error) {
+                    // Fail silently, retry loop continues
+                }
+                // Exponential backoff delay
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+
+            // Remove bounce effect and load response
+            const aiContainer = document.getElementById(responseId);
+            const avatar = aiContainer.querySelector('div');
+            avatar.classList.remove('animate-bounce');
+
+            if (success) {
+                const textBody = aiContainer.querySelector('div:last-child');
+                textBody.innerHTML = `
+                    <p class="font-bold text-xs text-forest-dark mb-1">Professor Bruiser</p>
+                    <div class="text-gray-700 leading-relaxed prose prose-sm max-w-none space-y-2">
+                        ${formatMarkdown(resultText)}
+                    </div>
+                `;
+            } else {
+                const textBody = aiContainer.querySelector('div:last-child');
+                textBody.innerHTML = `
+                    <p class="font-bold text-xs text-forest-dark mb-1">Professor Bruiser</p>
+                    <p class="text-red-600 font-medium">Sorry, I had trouble connecting to the math department servers! Let me try again if you resend.</p>
+                `;
+            }
+
+            // Trigger MathJax rendering on the newly added response
+            if (window.MathJax && typeof MathJax.typesetPromise === 'function') {
+                MathJax.typesetPromise([aiContainer]);
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Helper markdown formatter for the AI responses (handles basic bullet points, bold and linebreaks)
+        function formatMarkdown(text) {
+            // Replace newlines with <br>
+            let formatted = text.replace(/\n/g, '<br>');
+            // Bold matching
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Bullet points matching
+            formatted = formatted.replace(/\*\s(.*?)(<br>|$)/g, '<li class="list-disc ml-4">$1</li>');
+            return formatted;
+        }
+
+        // Initialize sandbox formulas on load
+        window.onload = function() {
+            updateSandbox();
+        };
+    </script>
+</body>
+</html>
