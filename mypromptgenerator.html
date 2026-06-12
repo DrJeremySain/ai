@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Lesson Prompt Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">Lesson Prompt Generator</h1>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block font-semibold">Lesson Title</label>
+                <input type="text" id="title" class="w-full border rounded p-2 mt-1" placeholder="e.g. Introduction to Macroeconomics">
+            </div>
+            
+            <div>
+                <label class="block font-semibold">Topics Covered</label>
+                <textarea id="topics" class="w-full border rounded p-2 mt-1" rows="2" placeholder="List key topics..."></textarea>
+            </div>
+
+            <div>
+                <label class="block font-semibold">Learning Objectives</label>
+                <textarea id="objectives" class="w-full border rounded p-2 mt-1" rows="2" placeholder="What will students be able to do?"></textarea>
+            </div>
+
+            <div>
+                <label class="block font-semibold">Key Terms</label>
+                <input type="text" id="terms" class="w-full border rounded p-2 mt-1" placeholder="e.g. GDP, Inflation, Supply">
+            </div>
+
+            <div>
+                <label class="block font-semibold">Target Audience</label>
+                <input type="text" id="audience" class="w-full border rounded p-2 mt-1" placeholder="e.g. First-year Community College students">
+            </div>
+
+            <div>
+                <label class="block font-semibold">Activity Types (Select all that apply)</label>
+                <div class="grid grid-cols-2 gap-2 mt-2" id="activities">
+                    <label><input type="checkbox" value="interactive learning activities"> Interactive Activities</label>
+                    <label><input type="checkbox" value="assessments"> Assessments</label>
+                    <label><input type="checkbox" value="real-world applications"> Real-world Applications</label>
+                    <label><input type="checkbox" value="case studies"> Case Studies</label>
+                    <label><input type="checkbox" value="analogies"> Analogies</label>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" id="ada" class="w-5 h-5">
+                <label class="font-semibold">Include ADA Compliance Guidelines</label>
+            </div>
+
+            <button onclick="generatePrompt()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">Generate AI Prompt</button>
+        </div>
+
+        <div id="outputContainer" class="hidden mt-8">
+            <h2 class="font-bold text-lg mb-2">Your Generated Prompt:</h2>
+            <textarea id="output" readonly class="w-full h-64 border p-4 bg-gray-50 rounded text-sm font-mono"></textarea>
+            <button onclick="copyToClipboard()" class="mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        function generatePrompt() {
+            const title = document.getElementById('title').value;
+            const topics = document.getElementById('topics').value;
+            const objectives = document.getElementById('objectives').value;
+            const terms = document.getElementById('terms').value;
+            const audience = document.getElementById('audience').value;
+            const ada = document.getElementById('ada').checked;
+            
+            const selectedActivities = Array.from(document.querySelectorAll('#activities input:checked'))
+                .map(cb => cb.value).join(', ');
+
+            let prompt = `Act as an expert instructional designer for community colleges. Create a detailed lesson plan based on these parameters:
+
+Lesson Title: ${title}
+Target Audience: ${audience}
+Key Topics: ${topics}
+Learning Objectives: ${objectives}
+Key Terms to define: ${terms}
+
+Please include the following components: ${selectedActivities}.
+${ada ? 'Ensure all suggested activities and materials strictly follow ADA compliance guidelines for accessibility (WCAG 2.1).' : ''}
+Please incorporate clear analogies and relevant real-world examples to help students bridge abstract concepts with practical understanding. Format the lesson in a logical sequence suitable for a ${audience} classroom.`;
+
+            document.getElementById('output').value = prompt;
+            document.getElementById('outputContainer').classList.remove('hidden');
+        }
+
+        function copyToClipboard() {
+            const copyText = document.getElementById("output");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Prompt copied to clipboard!");
+        }
+    </script>
+</body>
+</html>
