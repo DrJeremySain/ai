@@ -53,7 +53,8 @@
       <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">Find the ONE word shared between both groups.</p>
     </div>
 
-    <div class="flex gap-4 sm:gap-6 items-center">
+    <div class="flex gap-3 sm:gap-6 items-center">
+      <!-- Score Display -->
       <div class="flex flex-col items-center">
         <div class="flex items-center gap-1 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-500"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
@@ -61,6 +62,8 @@
         </div>
         <div id="scoreDisplay" class="text-xl sm:text-2xl font-black text-slate-700">0</div>
       </div>
+
+      <!-- Streak Display -->
       <div class="flex flex-col items-center">
         <div class="flex items-center gap-1 text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider">
           <svg id="streakStar" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
@@ -68,13 +71,28 @@
         </div>
         <div id="streakDisplay" class="text-xl sm:text-2xl font-black text-slate-700">0</div>
       </div>
-      <button 
-        onclick="startNewRound()"
-        class="p-2 sm:p-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-        title="Skip & Get New Cards"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-      </button>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2">
+        <!-- Hint Button -->
+        <button 
+          id="hintBtn"
+          onclick="useHint()"
+          class="p-2 sm:p-3 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-600 transition-colors border border-amber-200"
+          title="Use Hint (Show matching word length)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .3 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+        </button>
+
+        <!-- Skip Button -->
+        <button 
+          onclick="startNewRound()"
+          class="p-2 sm:p-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors border border-slate-200"
+          title="Skip & Get New Cards"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -205,6 +223,7 @@
     let streak = 0;
     let status = 'playing'; // 'playing', 'correct', 'wrong'
     let clickedWordId = null;
+    let hintActive = false;
 
     // DOM Elements
     const cardAContainer = document.getElementById('cardAContainer');
@@ -213,6 +232,7 @@
     const streakDisplay = document.getElementById('streakDisplay');
     const streakStar = document.getElementById('streakStar');
     const feedbackContainer = document.getElementById('feedbackContainer');
+    const hintBtn = document.getElementById('hintBtn');
 
     // Utility to shuffle an array
     const shuffleArray = (array) => {
@@ -257,6 +277,13 @@
             Oops! That's not the match. Try again!
           </span>
         `;
+      } else if (hintActive) {
+        const correctLength = WORDS[commonWordId].length;
+        feedbackContainer.innerHTML = `
+          <span class="text-amber-600 font-bold text-sm sm:text-base flex items-center gap-2 animate-pulse">
+            Hint Active: Look for a word with exactly ${correctLength} letters!
+          </span>
+        `;
       } else {
         feedbackContainer.innerHTML = `
           <span class="text-slate-400 text-sm sm:text-base font-medium transition-opacity">
@@ -279,6 +306,7 @@
       
       const isTarget = wordId === commonWordId;
       const isClicked = wordId === clickedWordId;
+      const isSameLength = WORDS[wordId].length === WORDS[commonWordId].length;
 
       let btnClass = "word-btn font-bold shadow-sm select-none m-0.5 sm:m-1 text-[10px] sm:text-xs md:text-base leading-tight ";
 
@@ -286,6 +314,10 @@
         btnClass += "bg-green-500 text-white shadow-lg ring-2 sm:ring-4 ring-green-300 pop-out";
       } else if (status === 'wrong' && isClicked) {
         btnClass += "bg-red-500 text-white ring-2 sm:ring-4 ring-red-300 animate-pulse";
+      } else if (hintActive && !isSameLength) {
+        // Grey out word if hint is active and length is different
+        btnClass += "bg-slate-100 text-slate-300 opacity-20 cursor-not-allowed pointer-events-none border border-slate-100";
+        btn.disabled = true;
       } else if (status === 'playing') {
         btnClass += "bg-white text-gray-800 hover:bg-blue-50 hover-pop cursor-pointer border border-gray-200";
         btn.onclick = () => handleWordClick(wordId);
@@ -296,6 +328,17 @@
 
       btn.className = btnClass;
       return btn;
+    }
+
+    function useHint() {
+      if (status !== 'playing' || hintActive) return;
+      
+      hintActive = true;
+      hintBtn.classList.remove('bg-amber-50', 'text-amber-600', 'hover:bg-amber-100');
+      hintBtn.classList.add('bg-amber-500', 'text-white', 'cursor-not-allowed', 'opacity-70');
+      hintBtn.disabled = true;
+
+      renderCards();
     }
 
     function renderCards() {
@@ -321,7 +364,9 @@
 
       if (wordId === commonWordId) {
         status = 'correct';
-        score += 10 + (streak * 2);
+        // Give slightly fewer points if they had to use a hint
+        const pointsGained = hintActive ? Math.max(2, 5 + (streak)) : (10 + (streak * 2));
+        score += pointsGained;
         streak += 1;
         
         renderCards();
@@ -360,6 +405,11 @@
       
       status = 'playing';
       clickedWordId = null;
+      hintActive = false;
+
+      // Reset hint button UI
+      hintBtn.disabled = false;
+      hintBtn.className = "p-2 sm:p-3 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-600 transition-colors border border-amber-200";
       
       renderCards();
     }
