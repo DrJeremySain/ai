@@ -126,4 +126,247 @@
       "about", "across", "after", "again", "almost", "along", "always", "another", "around", "away",
       "because", "before", "behind", "below", "beside", "between", "both", "bottom", "bright", "bring",
       "brother", "brown", "build", "buy", "carry", "catch", "clean", "close", "clothes", "cold",
-      "color", "come", "copy", "could", "cover", "cross", "dark", "
+      "color", "come", "copy", "could", "cover", "cross", "dark", "dear", "deep", "done",
+      "draw", "drop", "early", "earth", "every", "fall", "family", "father", "find", "first",
+      "fly", "friend", "from", "front", "full", "funny", "gave", "girl", "give", "goes",
+      "going", "good", "great", "green", "grow", "half", "happy", "hear", "help", "here",
+      "high", "hold", "hope", "house", "hurt", "into", "jump", "just", "keep", "kind",
+      "know", "laugh", "leave", "left", "light", "like", "line", "little", "live", "long",
+      "look", "love", "made", "make", "many", "maybe", "mean", "might", "money", "more",
+      "morning", "mother", "much", "must", "name", "never", "next", "nice", "night", "nothing",
+      "number", "often", "once", "only", "open", "other", "over", "page", "paper", "part",
+      "party", "people", "picture", "place", "play", "please", "point", "pretty", "pull", "push",
+      "quiet", "read", "ready", "real", "right", "round", "same", "school", "second", "seven",
+      "shall", "share", "show", "sing", "sister", "sleep", "small", "some", "soon", "sound",
+      "sport", "start", "state", "still", "stop", "story", "study", "such", "sure", "take",
+      "talk", "teach", "tell", "thank", "their", "them", "then", "there", "these", "they",
+      "thing", "think", "third", "those", "three", "through", "time", "today", "together", "told",
+      "tomorrow", "took", "toward", "town", "tree", "true", "turn", "under", "until", "upon",
+      "very", "walk", "want", "warm", "wash", "watch", "water", "were", "what", "when",
+      "where", "which", "while", "white", "whole", "whom", "whose", "will", "with", "word",
+      "work", "world", "would", "write", "year", "yellow", "your", "apple", "bear", "cat",
+      "dog", "elephant", "fish", "goat", "horse", "iguana", "jelly", "kite", "lion", "monkey",
+      "nest", "owl", "pig", "queen", "rabbit", "snake", "tiger", "umbrella", "violin", "whale",
+      "xylophone", "zebra", "clock", "train", "boat", "plane", "truck", "desk", "chair", "table",
+      "window", "door", "grass", "flower", "plant", "cloud", "rain", "snow", "star", "moon",
+      "sun", "river", "lake", "mountain", "rock", "sand", "dirt", "fire", "wind", "bird",
+      "frog", "bug", "bee", "ant", "spider", "worm", "crab", "shell", "shape", "circle",
+      "square", "triangle", "cube", "space", "form", "piece", "weight", "size", "height", "length",
+      "width", "math", "science", "art", "music", "band", "song", "drum", "bell", "ring",
+      "phone", "screen", "board", "chalk", "pen", "pencil", "glue", "tape", "clip", "book",
+      "box", "card", "game", "toy", "block", "doll", "ball"
+    ];
+
+    // --- MATHEMATICS: FINITE PROJECTIVE PLANE OF ORDER 17 ---
+    const generateProjectivePlane = () => {
+      const q = 17;
+      const lines = [];
+
+      // 1. Line at infinity
+      const lineInf = [];
+      for (let i = 0; i <= q; i++) {
+        lineInf.push(q * q + i); // Points 289 to 306
+      }
+      lines.push(lineInf);
+
+      // 2. Vertical lines: x = c
+      for (let c = 0; c < q; c++) {
+        const vLine = [];
+        for (let y = 0; y < q; y++) {
+          vLine.push(y * q + c); // Affine points
+        }
+        vLine.push(q * q + q); // Point at infinity for vertical lines (306)
+        lines.push(vLine);
+      }
+
+      // 3. Other lines: y = m*x + b (modulo 17)
+      for (let m = 0; m < q; m++) {
+        for (let b = 0; b < q; b++) {
+          const line = [];
+          for (let x = 0; x < q; x++) {
+            const y = (m * x + b) % q;
+            line.push(y * q + x); // Affine points
+          }
+          line.push(q * q + m); // Point at infinity for slope m (289 + m)
+          lines.push(line);
+        }
+      }
+      return lines;
+    };
+
+    // Initialize plane
+    const projectivePlane = generateProjectivePlane();
+
+    // Game State
+    let cardA = [];
+    let cardB = [];
+    let commonWordId = null;
+    let score = 0;
+    let streak = 0;
+    let status = 'playing'; // 'playing', 'correct', 'wrong'
+    let clickedWordId = null;
+
+    // DOM Elements
+    const cardAContainer = document.getElementById('cardAContainer');
+    const cardBContainer = document.getElementById('cardBContainer');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const streakDisplay = document.getElementById('streakDisplay');
+    const streakStar = document.getElementById('streakStar');
+    const feedbackContainer = document.getElementById('feedbackContainer');
+
+    // Utility to shuffle an array
+    const shuffleArray = (array) => {
+      const newArr = [...array];
+      for (let i = newArr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+      }
+      return newArr;
+    };
+
+    function updateScoreBoard() {
+      scoreDisplay.textContent = score;
+      streakDisplay.textContent = streak;
+      
+      if (streak > 0) {
+        streakDisplay.className = "text-xl sm:text-2xl font-black text-orange-500";
+      } else {
+        streakDisplay.className = "text-xl sm:text-2xl font-black text-slate-700";
+      }
+
+      if (streak > 2) {
+        streakStar.classList.remove('text-slate-400');
+        streakStar.classList.add('text-orange-500', 'fill-orange-500');
+      } else {
+        streakStar.classList.add('text-slate-400');
+        streakStar.classList.remove('text-orange-500', 'fill-orange-500');
+      }
+    }
+
+    function updateFeedback() {
+      if (status === 'correct') {
+        feedbackContainer.innerHTML = `
+          <span class="text-green-500 font-bold text-sm sm:text-xl flex items-center gap-1 sm:gap-2 transition-opacity">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 sm:w-6 sm:h-6"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 
+            Great job! Finding next cards...
+          </span>
+        `;
+      } else if (status === 'wrong') {
+        feedbackContainer.innerHTML = `
+          <span class="text-red-500 font-bold text-sm sm:text-xl transition-opacity">
+            Oops! That's not the match. Try again!
+          </span>
+        `;
+      } else {
+        feedbackContainer.innerHTML = `
+          <span class="text-slate-400 text-sm sm:text-base font-medium transition-opacity">
+            Click the word that appears on BOTH cards.
+          </span>
+        `;
+      }
+    }
+
+    function createWordBtn(wordId) {
+      const btn = document.createElement('button');
+      
+      // Pseudo-random sizing/rotation
+      const rotation = (wordId * 13) % 40 - 20; 
+      const scale = 0.8 + ((wordId * 7) % 40) / 100;
+      
+      btn.textContent = WORDS[wordId];
+      btn.style.setProperty('--rot', `${rotation}deg`);
+      btn.style.setProperty('--scl', scale);
+      
+      const isTarget = wordId === commonWordId;
+      const isClicked = wordId === clickedWordId;
+
+      let btnClass = "word-btn font-bold shadow-sm select-none m-0.5 sm:m-1 text-[10px] sm:text-xs md:text-base leading-tight ";
+
+      if (status === 'correct' && isTarget) {
+        btnClass += "bg-green-500 text-white shadow-lg ring-2 sm:ring-4 ring-green-300 pop-out";
+      } else if (status === 'wrong' && isClicked) {
+        btnClass += "bg-red-500 text-white ring-2 sm:ring-4 ring-red-300 animate-pulse";
+      } else if (status === 'playing') {
+        btnClass += "bg-white text-gray-800 hover:bg-blue-50 hover-pop cursor-pointer border border-gray-200";
+        btn.onclick = () => handleWordClick(wordId);
+      } else {
+        btnClass += "bg-white text-gray-400 opacity-50 cursor-default border border-gray-100";
+        btn.disabled = true;
+      }
+
+      btn.className = btnClass;
+      return btn;
+    }
+
+    function renderCards() {
+      cardAContainer.innerHTML = '';
+      cardBContainer.innerHTML = '';
+
+      cardA.forEach(id => {
+        cardAContainer.appendChild(createWordBtn(id));
+      });
+
+      cardB.forEach(id => {
+        cardBContainer.appendChild(createWordBtn(id));
+      });
+      
+      updateFeedback();
+      updateScoreBoard();
+    }
+
+    function handleWordClick(wordId) {
+      if (status !== 'playing') return;
+
+      clickedWordId = wordId;
+
+      if (wordId === commonWordId) {
+        status = 'correct';
+        score += 10 + (streak * 2);
+        streak += 1;
+        
+        renderCards();
+
+        setTimeout(() => {
+          startNewRound();
+        }, 1500);
+      } else {
+        status = 'wrong';
+        streak = 0;
+        
+        renderCards();
+
+        setTimeout(() => {
+          status = 'playing';
+          clickedWordId = null;
+          renderCards();
+        }, 1000);
+      }
+    }
+
+    function startNewRound() {
+      let index1 = Math.floor(Math.random() * 307);
+      let index2 = Math.floor(Math.random() * 307);
+      while (index1 === index2) {
+        index2 = Math.floor(Math.random() * 307);
+      }
+
+      const line1 = projectivePlane[index1];
+      const line2 = projectivePlane[index2];
+
+      commonWordId = line1.find(point => line2.includes(point));
+
+      cardA = shuffleArray(line1);
+      cardB = shuffleArray(line2);
+      
+      status = 'playing';
+      clickedWordId = null;
+      
+      renderCards();
+    }
+
+    // Initialize game on load
+    window.onload = startNewRound;
+
+  </script>
+</body>
+</html>
