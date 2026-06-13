@@ -2,16 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Mobile-optimized viewport that handles notches/safe areas and prevents accidental zooming -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>Projective Plane Spot It!</title>
+  
+  <!-- Apple Web App Meta Tags (Native iOS Feel) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Spot It!">
+  
+  <!-- Embedded PWA Web App Manifest using a self-contained Data URI -->
+  <link rel="manifest" href='data:application/json,{"name":"Projective Plane Spot It","short_name":"Spot It","start_url":".","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","orientation":"portrait","icons":[{"src":"https://img.icons8.com/fluency/192/000000/brainstorm.png","sizes":"192x192","type":"image/png"},{"src":"https://img.icons8.com/fluency/512/000000/brainstorm.png","sizes":"512x512","type":"image/png"}]}' />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Prevent selection, callouts, and double-tap zoom for a perfect native-app feel */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Support iOS notches and status bar padding */
+    .safe-top {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+    .safe-bottom {
+      padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    }
+
     /* Custom styles for word buttons to handle dynamic rotation and hover states */
     .word-btn {
       transform: rotate(var(--rot)) scale(var(--scl));
       border-radius: 9999px;
       padding: 4px 8px;
       transition: all 0.2s ease-in-out;
+      touch-action: manipulation; /* Prevents double-tap-to-zoom delay */
     }
     @media (min-width: 768px) {
       .word-btn {
@@ -41,7 +68,7 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-blue-200 flex flex-col overflow-x-hidden">
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col overflow-x-hidden safe-top safe-bottom">
 
   <!-- Header -->
   <header class="bg-white shadow-sm border-b border-slate-200 px-4 py-3 sm:px-6 sm:py-4 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -266,7 +293,7 @@
     function updateFeedback() {
       if (status === 'correct') {
         feedbackContainer.innerHTML = `
-          <span class="text-green-500 font-bold text-sm sm:text-xl flex items-center gap-1 sm:gap-2 transition-opacity">
+          <span class="text-green-500 font-bold text-sm sm:text-xl flex items-center gap-1 sm:gap-2 transition-opacity animate-bounce">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 sm:w-6 sm:h-6"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> 
             Great job! Finding next cards...
           </span>
@@ -364,7 +391,6 @@
 
       if (wordId === commonWordId) {
         status = 'correct';
-        // Give slightly fewer points if they had to use a hint
         const pointsGained = hintActive ? Math.max(2, 5 + (streak)) : (10 + (streak * 2));
         score += pointsGained;
         streak += 1;
