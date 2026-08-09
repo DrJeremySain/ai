@@ -1,774 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complex Arithmetic & Plane Transformations Lab</title>
-    <!-- Tailwind CSS for modern responsive layout -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- MathJax for rendering pretty mathematical notation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <style>
-        :root {
-            --forest-dark: #1b4332;
-            --forest-mid: #2d6a4f;
-            --forest-light: #52b788;
-            --forest-accent: #74c69d;
-            --forest-bg: #f4f9f5;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1100, initial-scale=1.0">
+  <title>Complex Number Visualizer</title>
+  <style>
+    :root {
+      --primary-color: #1b4d3e; /* Forest Green */
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-color: #2d3748;
+    }
 
-        body {
-            background-color: var(--forest-bg);
-            color: #1f2937;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        .canvas-container {
-            position: relative;
-            background: #ffffff;
-            border: 2px solid var(--forest-mid);
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(27, 67, 50, 0.1), 0 2px 4px -1px rgba(27, 67, 50, 0.06);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+    }
 
-        .canvas-container:hover {
-            border-color: var(--forest-dark);
-            box-shadow: 0 10px 15px -3px rgba(27, 67, 50, 0.15);
-        }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-            border-radius: 0.6rem;
-            cursor: crosshair;
-        }
+    h1 {
+      color: var(--primary-color);
+      font-size: 1.6rem;
+      margin-bottom: 6px;
+    }
 
-        .btn-forest {
-            background-color: var(--forest-mid);
-            color: #ffffff;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+    p.subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+    }
 
-        .btn-forest:hover {
-            background-color: var(--forest-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-        }
+    /* MAIN FLEX CONTAINER FOR SIDE-BY-SIDE PLANES */
+    .planes-wrapper {
+      width: 100%;
+      overflow-x: auto; /* Safety scrollbar if outer viewport is narrower than min-width */
+      padding-bottom: 10px;
+    }
 
-        .btn-forest-outline {
-            background-color: #ffffff;
-            color: var(--forest-mid);
-            border: 2px solid var(--forest-mid);
-            font-weight: 600;
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-        }
+    .planes-container {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;          /* CRITICAL: Prevents planes from stacking vertically */
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 960px;           /* Holds minimum desktop width inside iframe */
+      width: 100%;
+    }
 
-        .btn-forest-outline:hover {
-            background-color: var(--forest-mid);
-            color: #ffffff;
-        }
+    /* INDIVIDUAL PLANE CARDS */
+    .plane-card {
+      flex: 1 1 0;                /* Distributes available width equally across all 3 */
+      min-width: 300px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        .badge-coefficient {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.6rem;
-            border-radius: 9999px;
-            font-weight: 700;
-            font-size: 0.85rem;
-        }
+    .plane-card h2 {
+      font-size: 1.1rem;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      text-align: center;
+    }
 
-        /* Custom scrollbars */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #e8f5e9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--forest-mid);
-            border-radius: 4px;
-        }
-    </style>
+    /* CANVAS RESPONSIVENESS */
+    .canvas-container {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      position: relative;
+      background-color: #fafafa;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .plane-description {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #475569;
+      text-align: center;
+    }
+  </style>
 </head>
-<body class="min-h-screen pb-12">
+<body>
 
-    <header class="bg-gradient-to-r from-[#1b4332] to-[#2d6a4f] text-white py-5 px-6 shadow-lg mb-6">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-                    <svg class="w-8 h-8 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Complex Arithmetic & Plane Transformations Lab</h1>
-                    <p class="text-emerald-100 text-sm md:text-base font-medium">Math 301: Exploring $f(z) = a \cdot z + b \cdot \bar{z} + c$ in the Complex Plane</p>
-                </div>
-            </div>
+  <header>
+    <h1>Complex Number Transformations</h1>
+    <p class="subtitle">Interactive side-by-side plane visualizer</p>
+  </header>
 
-            <!-- Upper Right Corner Badge / Professor Avatar -->
-            <div class="flex items-center gap-3 bg-white text-[#1b4332] px-4 py-2 rounded-2xl shadow-md border-2 border-emerald-300">
-                <div class="relative">
-                    <svg class="w-10 h-10 rounded-full border-2 border-[#2d6a4f] bg-emerald-50 p-1" viewBox="0 0 24 24" fill="none" stroke="#1b4332" stroke-width="1.8">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
-                        <path d="M15 6l2 2 4-4" stroke="#2d6a4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-                </div>
-                <div class="text-left">
-                    <div class="font-bold text-sm leading-tight">Dr. Jeremy Sain</div>
-                    <div class="text-xs text-emerald-700 font-semibold">Clarendon College</div>
-                </div>
-            </div>
-
+  <div class="planes-wrapper">
+    <div class="planes-container">
+      
+      <!-- PLANE 1 -->
+      <div class="plane-card">
+        <h2>Input Plane ($z$)</h2>
+        <div class="canvas-container">
+          <canvas id="plane1"></canvas>
         </div>
-    </header>
+        <p class="plane-description">Domain / Original Complex Number</p>
+      </div>
 
-    <main class="max-w-7xl mx-auto px-4 md:px-6">
-
-        <!-- Preset Toolbar Card -->
-        <section class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 mb-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex items-center gap-2">
-                    <span class="font-bold text-[#1b4332] text-sm md:text-base flex items-center gap-1">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        Transformation Presets:
-                    </span>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 text-xs md:text-sm">
-                    <button onclick="setPreset('identity')" class="btn-forest-outline text-xs py-1.5 px-3">Identity ($z$)</button>
-                    <button onclick="setPreset('rotate90')" class="btn-forest-outline text-xs py-1.5 px-3">Rotate $90^\circ$ ($i \cdot z$)</button>
-                    <button onclick="setPreset('scaleRotate')" class="btn-forest-outline text-xs py-1.5 px-3">Spiral Scale ($(1+i)z$)</button>
-                    <button onclick="setPreset('reflectX')" class="btn-forest-outline text-xs py-1.5 px-3">Reflect X ($\bar{z}$)</button>
-                    <button onclick="setPreset('reflectY')" class="btn-forest-outline text-xs py-1.5 px-3">Reflect Y ($-\bar{z}$)</button>
-                    <button onclick="setPreset('shear')" class="btn-forest-outline text-xs py-1.5 px-3">Horizontal Shear</button>
-                    <button onclick="setPreset('glide')" class="btn-forest-outline text-xs py-1.5 px-3">Glide Reflection</button>
-                    <button onclick="setPreset('collapse')" class="btn-forest-outline text-xs py-1.5 px-3 text-red-600 border-red-200 hover:bg-red-600 hover:border-red-600">Collapse to Line</button>
-                </div>
-            </div>
-        </section>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-            <!-- ================= PLANE 1: COEFFICIENT PLANE ================= -->
-            <div class="flex flex-col">
-                <div class="bg-[#1b4332] text-white px-4 py-2.5 rounded-t-xl font-bold flex items-center justify-between text-sm md:text-base">
-                    <span>1. Coefficients Plane ($a, b, c$)</span>
-                    <span class="text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">Parameter Space</span>
-                </div>
-                <div class="canvas-container rounded-t-none p-2 flex-1 flex flex-col justify-between">
-                    <div>
-                        <canvas id="coeffCanvas" width="380" height="380"></canvas>
-                        
-                        <!-- Active Point Selection Controls -->
-                        <div class="mt-3 grid grid-cols-3 gap-2">
-                            <button id="btnSelectA" onclick="setActiveCoeff('a')" class="py-1.5 px-2 rounded border-2 border-emerald-600 bg-emerald-50 text-emerald-900 font-bold text-xs text-center flex flex-col items-center">
-                                <span>Point $a$ (Direct)</span>
-                                <span id="valA" class="text-[10px] font-normal text-emerald-700">1.00 + 0.00i</span>
-                            </button>
-                            <button id="btnSelectB" onclick="setActiveCoeff('b')" class="py-1.5 px-2 rounded border border-gray-200 bg-white text-gray-700 font-bold text-xs text-center flex flex-col items-center">
-                                <span>Point $b$ (Conjugate)</span>
-                                <span id="valB" class="text-[10px] font-normal text-gray-500">0.00 + 0.00i</span>
-                            </button>
-                            <button id="btnSelectC" onclick="setActiveCoeff('c')" class="py-1.5 px-2 rounded border border-gray-200 bg-white text-gray-700 font-bold text-xs text-center flex flex-col items-center">
-                                <span>Point $c$ (Shift)</span>
-                                <span id="valC" class="text-[10px] font-normal text-gray-500">0.00 + 0.00i</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="mt-3 p-2.5 bg-emerald-50/70 rounded-lg text-xs text-[#1b4332] border border-emerald-100">
-                        <p class="font-semibold mb-1">💡 Professor's Hint:</p>
-                        <p id="coeffHint">Click or drag $a$, $b$, and $c$ on this plane. Notice how $|a|$ scales, $\arg(a)$ rotates, $b$ adds reflections, and $c$ translates!</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ================= PLANE 2: DOMAIN PLANE ================= -->
-            <div class="flex flex-col">
-                <div class="bg-[#1b4332] text-white px-4 py-2.5 rounded-t-xl font-bold flex items-center justify-between text-sm md:text-base">
-                    <span>2. Domain Plane ($z$-Plane)</span>
-                    <span class="text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">Input Polygon</span>
-                </div>
-                <div class="canvas-container rounded-t-none p-2 flex-1 flex flex-col justify-between">
-                    <div>
-                        <canvas id="domainCanvas" width="380" height="380"></canvas>
-                        
-                        <!-- Polygon Controls & Preset Shapes -->
-                        <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
-                            <div class="flex items-center gap-1.5">
-                                <button onclick="loadShape('house')" class="btn-forest-outline text-xs py-1 px-2">🏠 House</button>
-                                <button onclick="loadShape('letterF')" class="btn-forest-outline text-xs py-1 px-2">🔤 'F' Shape</button>
-                                <button onclick="loadShape('star')" class="btn-forest-outline text-xs py-1 px-2">⭐ Star</button>
-                                <button onclick="loadShape('square')" class="btn-forest-outline text-xs py-1 px-2">🔲 Grid</button>
-                            </div>
-                            <button onclick="clearPolygon()" class="bg-red-100 text-red-700 hover:bg-red-200 font-semibold px-2.5 py-1 rounded text-xs transition-colors">Clear</button>
-                        </div>
-                    </div>
-
-                    <div class="mt-3 p-2.5 bg-emerald-50/70 rounded-lg text-xs text-[#1b4332] border border-emerald-100 flex items-center justify-between">
-                        <div>
-                            <span class="font-bold">Instructions:</span> Click on this canvas to draw custom vertices.
-                        </div>
-                        <span id="vertexCount" class="font-mono bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-[11px] font-bold">5 Vertices</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ================= PLANE 3: CODOMAIN PLANE ================= -->
-            <div class="flex flex-col">
-                <div class="bg-[#1b4332] text-white px-4 py-2.5 rounded-t-xl font-bold flex items-center justify-between text-sm md:text-base">
-                    <span>3. Image Plane ($w$-Plane)</span>
-                    <span class="text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">Output $f(z)$</span>
-                </div>
-                <div class="canvas-container rounded-t-none p-2 flex-1 flex flex-col justify-between">
-                    <div>
-                        <canvas id="imageCanvas" width="380" height="380"></canvas>
-                        
-                        <div class="mt-3 p-2 bg-emerald-900 text-white rounded text-xs font-mono text-center">
-                            $f(z) = (<span id="formulaA">1</span>)z + (<span id="formulaB">0</span>)\bar{z} + (<span id="formulaC">0</span>)$
-                        </div>
-                    </div>
-
-                    <div class="mt-3 p-2.5 bg-emerald-50/70 rounded-lg text-xs text-[#1b4332] border border-emerald-100">
-                        <div class="font-bold mb-1 flex items-center justify-between">
-                            <span>Geometric Properties:</span>
-                            <span id="areaRatioBadge" class="bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded font-mono text-[10px]">Area Scale: 1.00x</span>
-                        </div>
-                        <p id="geomAnalysis">Conformal map (Orientation Preserved). Pure spiral similarity.</p>
-                    </div>
-                </div>
-            </div>
-
+      <!-- PLANE 2 -->
+      <div class="plane-card">
+        <h2>Intermediate Plane</h2>
+        <div class="canvas-container">
+          <canvas id="plane2"></canvas>
         </div>
-
-        <section class="bg-white rounded-xl p-6 shadow-sm border border-emerald-100">
-            <h2 class="text-xl font-extrabold text-[#1b4332] mb-3 flex items-center gap-2">
-                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                Professor's Lecture Notes: Decomposing Linear Transformations on $\mathbb{R}^2$
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-                <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
-                    <h3 class="font-bold text-[#1b4332] text-base mb-2 border-b border-emerald-200 pb-1">1. Direct Term $a \cdot z$</h3>
-                    <p class="text-gray-700 leading-relaxed">
-                        When written in polar form $a = r e^{i\theta}$, multiplying $z$ by $a$ simultaneously scales $z$ by length $r = |a|$ and rotates $z$ counterclockwise by angle $\theta = \text{Arg}(a)$. This represents a <strong>spiral similarity</strong> that preserves orientation.
-                    </p>
-                </div>
-
-                <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
-                    <h3 class="font-bold text-[#1b4332] text-base mb-2 border-b border-emerald-200 pb-1">2. Conjugate Term $b \cdot \bar{z}$</h3>
-                    <p class="text-gray-700 leading-relaxed">
-                        The complex conjugate $\bar{z} = x - iy$ reflects points across the real axis. Multiplying by $b = s e^{i\phi}$ reflects and rotates $z$. This term introduces <strong>orientation reversal</strong>, shears, and non-uniform scaling!
-                    </p>
-                </div>
-
-                <div class="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
-                    <h3 class="font-bold text-[#1b4332] text-base mb-2 border-b border-emerald-200 pb-1">3. Matrix Equivalence</h3>
-                    <p class="text-gray-700 leading-relaxed">
-                        Every real $2 \times 2$ affine transformation $\begin{bmatrix}u \\ v\end{bmatrix} = \begin{bmatrix}A & B \\ C & D\end{bmatrix}\begin{bmatrix}x \\ y\end{bmatrix} + \begin{bmatrix}c_1 \\ c_2\end{bmatrix}$ is equivalent to $f(z) = az + b\bar{z} + c$ with area scale factor $|\det(M)| = ||a|^2 - |b|^2|$.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <script>
-        // Complex Number Class
-        class Complex {
-            constructor(re, im) {
-                this.re = re;
-                this.im = im;
-            }
-
-            add(c) {
-                return new Complex(this.re + c.re, this.im + c.im);
-            }
-
-            sub(c) {
-                return new Complex(this.re - c.re, this.im - c.im);
-            }
-
-            mul(c) {
-                return new Complex(
-                    this.re * c.re - this.im * c.im,
-                    this.re * c.im + this.im * c.re
-                );
-            }
-
-            conj() {
-                return new Complex(this.re, -this.im);
-            }
-
-            abs() {
-                return Math.hypot(this.re, this.im);
-            }
-
-            arg() {
-                return Math.atan2(this.im, this.re);
-            }
-
-            toString(digits = 2) {
-                const r = this.re.toFixed(digits);
-                const i = Math.abs(this.im).toFixed(digits);
-                const sign = this.im >= 0 ? '+' : '-';
-                return `${r} ${sign} ${i}i`;
-            }
-        }
-
-        // Transformation parameters f(z) = a*z + b*zbar + c
-        let coeffA = new Complex(1.0, 0.0);
-        let coeffB = new Complex(0.0, 0.0);
-        let coeffC = new Complex(0.0, 0.0);
-
-        let activeCoeffKey = 'a'; // 'a', 'b', or 'c'
-        let isDraggingCoeff = false;
-
-        // Polygon Vertices in Z-Plane
-        let polygonVertices = [];
-
-        // Canvas element references
-        const coeffCanvas = document.getElementById('coeffCanvas');
-        const domainCanvas = document.getElementById('domainCanvas');
-        const imageCanvas = document.getElementById('imageCanvas');
-
-        const ctxCoeff = coeffCanvas.getContext('2d');
-        const ctxDomain = domainCanvas.getContext('2d');
-        const ctxImage = imageCanvas.getContext('2d');
-
-        // Color Palette for Vertices & Polygons
-        const FOREST_DARK = '#1b4332';
-        const FOREST_MID = '#2d6a4f';
-        const FOREST_LIGHT = '#52b788';
-        const VERTEX_COLORS = ['#d90429', '#f77f00', '#fcbf49', '#2a9d8f', '#457b9d', '#e76f51', '#9b5de5'];
-
-        // Scale factors for coordinate systems
-        const COEFF_SCALE = 3.5; // [-3.5, 3.5]
-        const PLANE_SCALE = 5.0; // [-5.0, 5.0]
-
-        function complexToCanvas(c, canvas, maxRange) {
-            const w = canvas.width;
-            const h = canvas.height;
-            const x = ((c.re + maxRange) / (2 * maxRange)) * w;
-            const y = ((maxRange - c.im) / (2 * maxRange)) * h;
-            return { x, y };
-        }
-
-        function canvasToComplex(x, y, canvas, maxRange) {
-            const w = canvas.width;
-            const h = canvas.height;
-            const re = (x / w) * (2 * maxRange) - maxRange;
-            const im = maxRange - (y / h) * (2 * maxRange);
-            return new Complex(re, im);
-        }
-
-        // Transformation function f(z) = a*z + b*zbar + c
-        function transform(z) {
-            const termA = coeffA.mul(z);
-            const termB = coeffB.mul(z.conj());
-            return termA.add(termB).add(coeffC);
-        }
-
-        function drawGrid(ctx, canvas, maxRange) {
-            const w = canvas.width;
-            const h = canvas.height;
-
-            ctx.clearRect(0, 0, w, h);
-
-            // Subtle background grid
-            ctx.strokeStyle = '#e2e8f0';
-            ctx.lineWidth = 1;
-
-            const step = 1.0;
-            for (let r = -Math.floor(maxRange); r <= Math.ceil(maxRange); r += step) {
-                if (r === 0) continue;
-                
-                // Vertical grid lines
-                const p1 = complexToCanvas(new Complex(r, -maxRange), canvas, maxRange);
-                const p2 = complexToCanvas(new Complex(r, maxRange), canvas, maxRange);
-                ctx.beginPath();
-                ctx.moveTo(p1.x, p1.y);
-                ctx.lineTo(p2.x, p2.y);
-                ctx.stroke();
-
-                // Horizontal grid lines
-                const p3 = complexToCanvas(new Complex(-maxRange, r), canvas, maxRange);
-                const p4 = complexToCanvas(new Complex(maxRange, r), canvas, maxRange);
-                ctx.beginPath();
-                ctx.moveTo(p3.x, p3.y);
-                ctx.lineTo(p4.x, p4.y);
-                ctx.stroke();
-            }
-
-            // Main Axes
-            ctx.strokeStyle = '#94a3b8';
-            ctx.lineWidth = 1.5;
-
-            const origin = complexToCanvas(new Complex(0, 0), canvas, maxRange);
-
-            // Real Axis
-            ctx.beginPath();
-            ctx.moveTo(0, origin.y);
-            ctx.lineTo(w, origin.y);
-            ctx.stroke();
-
-            // Imaginary Axis
-            ctx.beginPath();
-            ctx.moveTo(origin.x, 0);
-            ctx.lineTo(origin.x, h);
-            ctx.stroke();
-
-            // Axis Labels
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px sans-serif';
-            ctx.fillText('Re', w - 18, origin.y - 6);
-            ctx.fillText('Im', origin.x + 6, 14);
-        }
-
-        function renderCoeffPlane() {
-            drawGrid(ctxCoeff, coeffCanvas, COEFF_SCALE);
-
-            const ptA = complexToCanvas(coeffA, coeffCanvas, COEFF_SCALE);
-            const ptB = complexToCanvas(coeffB, coeffCanvas, COEFF_SCALE);
-            const ptC = complexToCanvas(coeffC, coeffCanvas, COEFF_SCALE);
-            const origin = complexToCanvas(new Complex(0, 0), coeffCanvas, COEFF_SCALE);
-
-            // Vector lines from origin
-            drawVector(ctxCoeff, origin, ptA, '#10b981', 'a');
-            drawVector(ctxCoeff, origin, ptB, '#f59e0b', 'b');
-            drawVector(ctxCoeff, origin, ptC, '#6366f1', 'c');
-
-            // Draw control points
-            drawControlPoint(ctxCoeff, ptA, 'a', '#10b981', activeCoeffKey === 'a');
-            drawControlPoint(ctxCoeff, ptB, 'b', '#f59e0b', activeCoeffKey === 'b');
-            drawControlPoint(ctxCoeff, ptC, 'c', '#6366f1', activeCoeffKey === 'c');
-        }
-
-        function drawVector(ctx, from, to, color, label) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.stroke();
-        }
-
-        function drawControlPoint(ctx, pt, label, color, isActive) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(pt.x, pt.y, isActive ? 9 : 7, 0, 2 * Math.PI);
-            ctx.fill();
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            if (isActive) {
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, 13, 0, 2 * Math.PI);
-                ctx.stroke();
-            }
-
-            ctx.fillStyle = '#1e293b';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText(label, pt.x + 10, pt.y - 10);
-        }
-
-        function renderDomainPlane() {
-            drawGrid(ctxDomain, domainCanvas, PLANE_SCALE);
-
-            if (polygonVertices.length === 0) return;
-
-            // Draw polygon shape
-            ctxDomain.beginPath();
-            polygonVertices.forEach((v, idx) => {
-                const pt = complexToCanvas(v, domainCanvas, PLANE_SCALE);
-                if (idx === 0) ctxDomain.moveTo(pt.x, pt.y);
-                else ctxDomain.lineTo(pt.x, pt.y);
-            });
-            ctxDomain.closePath();
-
-            ctxDomain.fillStyle = 'rgba(45, 106, 79, 0.25)';
-            ctxDomain.fill();
-            ctxDomain.strokeStyle = FOREST_MID;
-            ctxDomain.lineWidth = 2.5;
-            ctxDomain.stroke();
-
-            // Draw Vertices
-            polygonVertices.forEach((v, idx) => {
-                const pt = complexToCanvas(v, domainCanvas, PLANE_SCALE);
-                const color = VERTEX_COLORS[idx % VERTEX_COLORS.length];
-
-                ctxDomain.fillStyle = color;
-                ctxDomain.beginPath();
-                ctxDomain.arc(pt.x, pt.y, 5, 0, 2 * Math.PI);
-                ctxDomain.fill();
-                ctxDomain.strokeStyle = '#ffffff';
-                ctxDomain.lineWidth = 1.5;
-                ctxDomain.stroke();
-            });
-        }
-
-        function renderImagePlane() {
-            drawGrid(ctxImage, imageCanvas, PLANE_SCALE);
-
-            if (polygonVertices.length === 0) return;
-
-            // Compute transformed vertices
-            const transformedVerts = polygonVertices.map(v => transform(v));
-
-            // Draw transformed polygon
-            ctxImage.beginPath();
-            transformedVerts.forEach((w, idx) => {
-                const pt = complexToCanvas(w, imageCanvas, PLANE_SCALE);
-                if (idx === 0) ctxImage.moveTo(pt.x, pt.y);
-                else ctxImage.lineTo(pt.x, pt.y);
-            });
-            ctxImage.closePath();
-
-            ctxImage.fillStyle = 'rgba(82, 183, 136, 0.35)';
-            ctxImage.fill();
-            ctxImage.strokeStyle = FOREST_DARK;
-            ctxImage.lineWidth = 2.5;
-            ctxImage.stroke();
-
-            // Draw Vertices
-            transformedVerts.forEach((w, idx) => {
-                const pt = complexToCanvas(w, imageCanvas, PLANE_SCALE);
-                const color = VERTEX_COLORS[idx % VERTEX_COLORS.length];
-
-                ctxImage.fillStyle = color;
-                ctxImage.beginPath();
-                ctxImage.arc(pt.x, pt.y, 5, 0, 2 * Math.PI);
-                ctxImage.fill();
-                ctxImage.strokeStyle = '#ffffff';
-                ctxImage.lineWidth = 1.5;
-                ctxImage.stroke();
-            });
-        }
-
-        function updateUI() {
-            renderCoeffPlane();
-            renderDomainPlane();
-            renderImagePlane();
-
-            // Update text displays
-            document.getElementById('valA').innerText = coeffA.toString();
-            document.getElementById('valB').innerText = coeffB.toString();
-            document.getElementById('valC').innerText = coeffC.toString();
-
-            document.getElementById('formulaA').innerText = coeffA.toString();
-            document.getElementById('formulaB').innerText = coeffB.toString();
-            document.getElementById('formulaC').innerText = coeffC.toString();
-
-            document.getElementById('vertexCount').innerText = `${polygonVertices.length} Vertices`;
-
-            // Geometric analysis
-            const absA = coeffA.abs();
-            const absB = coeffB.abs();
-            const areaScale = Math.abs(absA * absA - absB * absB);
-
-            document.getElementById('areaRatioBadge').innerText = `Area Scale: ${areaScale.toFixed(2)}x`;
-
-            let geomText = "";
-            if (absB < 0.001) {
-                const rotDeg = (coeffA.arg() * 180 / Math.PI).toFixed(1);
-                geomText = `Pure Orientation-Preserving Similarity (Conformal). Scale = ${absA.toFixed(2)}, Rotation = ${rotDeg}°.`;
-            } else if (absA < 0.001) {
-                geomText = `Pure Orientation-Reversing Similarity (Conjugate). Scale = ${absB.toFixed(2)}.`;
-            } else if (Math.abs(absA - absB) < 0.001) {
-                geomText = `Degenerate Map! Image collapses completely onto a 1D line. (Area = 0).`;
-            } else {
-                geomText = `General Affine Transformation combining rotation, stretch, shear, and reflection.`;
-            }
-            document.getElementById('geomAnalysis').innerText = geomText;
-
-            // Refresh MathJax rendering if available
-            if (window.MathJax && MathJax.Hub) {
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-            }
-        }
-
-        function setActiveCoeff(key) {
-            activeCoeffKey = key;
-            ['a', 'b', 'c'].forEach(k => {
-                const btn = document.getElementById(`btnSelect${k.toUpperCase()}`);
-                if (k === key) {
-                    btn.className = "py-1.5 px-2 rounded border-2 border-emerald-600 bg-emerald-50 text-emerald-900 font-bold text-xs text-center flex flex-col items-center";
-                } else {
-                    btn.className = "py-1.5 px-2 rounded border border-gray-200 bg-white text-gray-700 font-bold text-xs text-center flex flex-col items-center";
-                }
-            });
-            updateUI();
-        }
-
-        // Coefficient Canvas Mouse Interactions
-        coeffCanvas.addEventListener('mousedown', (e) => {
-            const rect = coeffCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const c = canvasToComplex(x, y, coeffCanvas, COEFF_SCALE);
-
-            // Check if user clicked near existing points to pick active coefficient
-            const distA = c.sub(coeffA).abs();
-            const distB = c.sub(coeffB).abs();
-            const distC = c.sub(coeffC).abs();
-
-            if (distA < 0.5) setActiveCoeff('a');
-            else if (distB < 0.5) setActiveCoeff('b');
-            else if (distC < 0.5) setActiveCoeff('c');
-
-            if (activeCoeffKey === 'a') coeffA = c;
-            else if (activeCoeffKey === 'b') coeffB = c;
-            else if (activeCoeffKey === 'c') coeffC = c;
-
-            isDraggingCoeff = true;
-            updateUI();
-        });
-
-        coeffCanvas.addEventListener('mousemove', (e) => {
-            if (!isDraggingCoeff) return;
-            const rect = coeffCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const c = canvasToComplex(x, y, coeffCanvas, COEFF_SCALE);
-
-            if (activeCoeffKey === 'a') coeffA = c;
-            else if (activeCoeffKey === 'b') coeffB = c;
-            else if (activeCoeffKey === 'c') coeffC = c;
-
-            updateUI();
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDraggingCoeff = false;
-        });
-
-        // Domain Canvas Mouse Interaction (Drawing Vertices)
-        domainCanvas.addEventListener('click', (e) => {
-            const rect = domainCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const z = canvasToComplex(x, y, domainCanvas, PLANE_SCALE);
-
-            polygonVertices.push(z);
-            updateUI();
-        });
-
-        function clearPolygon() {
-            polygonVertices = [];
-            updateUI();
-        }
-
-        function loadShape(type) {
-            polygonVertices = [];
-            if (type === 'house') {
-                polygonVertices = [
-                    new Complex(-1.5, -1.5),
-                    new Complex(1.5, -1.5),
-                    new Complex(1.5, 0.5),
-                    new Complex(0.0, 2.0),
-                    new Complex(-1.5, 0.5)
-                ];
-            } else if (type === 'letterF') {
-                polygonVertices = [
-                    new Complex(-1.5, -2.0),
-                    new Complex(-0.5, -2.0),
-                    new Complex(-0.5, 0.0),
-                    new Complex(1.2, 0.0),
-                    new Complex(1.2, 0.8),
-                    new Complex(-0.5, 0.8),
-                    new Complex(-0.5, 1.4),
-                    new Complex(1.5, 1.4),
-                    new Complex(1.5, 2.2),
-                    new Complex(-1.5, 2.2)
-                ];
-            } else if (type === 'star') {
-                const points = 5;
-                for (let i = 0; i < points * 2; i++) {
-                    const r = i % 2 === 0 ? 2.2 : 0.9;
-                    const angle = (i * Math.PI) / points - Math.PI / 2;
-                    polygonVertices.push(new Complex(r * Math.cos(angle), r * Math.sin(angle)));
-                }
-            } else if (type === 'square') {
-                polygonVertices = [
-                    new Complex(-1.5, -1.5),
-                    new Complex(1.5, -1.5),
-                    new Complex(1.5, 1.5),
-                    new Complex(-1.5, 1.5)
-                ];
-            }
-            updateUI();
-        }
-
-        function setPreset(preset) {
-            switch (preset) {
-                case 'identity':
-                    coeffA = new Complex(1.0, 0.0);
-                    coeffB = new Complex(0.0, 0.0);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-                case 'rotate90':
-                    coeffA = new Complex(0.0, 1.0);
-                    coeffB = new Complex(0.0, 0.0);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-                case 'scaleRotate':
-                    coeffA = new Complex(1.0, 1.0);
-                    coeffB = new Complex(0.0, 0.0);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-                case 'reflectX':
-                    coeffA = new Complex(0.0, 0.0);
-                    coeffB = new Complex(1.0, 0.0);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-                case 'reflectY':
-                    coeffA = new Complex(0.0, 0.0);
-                    coeffB = new Complex(-1.0, 0.0);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-                case 'shear':
-                    coeffA = new Complex(1.0, 0.5);
-                    coeffB = new Complex(0.0, 0.5);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-                case 'glide':
-                    coeffA = new Complex(0.0, 0.0);
-                    coeffB = new Complex(1.0, 0.0);
-                    coeffC = new Complex(1.5, 0.0);
-                    break;
-                case 'collapse':
-                    coeffA = new Complex(1.0, 0.0);
-                    coeffB = new Complex(1.0, 0.0);
-                    coeffC = new Complex(0.0, 0.0);
-                    break;
-            }
-            updateUI();
-        }
-
-        window.onload = () => {
-            loadShape('letterF');
-            updateUI();
-        };
-    </script>
+        <p class="plane-description">Transformed Components</p>
+      </div>
+
+      <!-- PLANE 3 -->
+      <div class="plane-card">
+        <h2>Output Plane ($w$)</h2>
+        <div class="canvas-container">
+          <canvas id="plane3"></canvas>
+        </div>
+        <p class="plane-description">Mapped Output Coordinates</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Canvas setup helper to maintain sharp resolution
+    function initCanvas(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        drawGrid(ctx, rect.width, rect.height);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+    }
+
+    // Example grid draw function
+    function drawGrid(ctx, width, height) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+
+      const step = width / 10;
+
+      // Grid lines
+      for (let x = 0; x <= width; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= height; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Main Axes
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(width / 2, 0); ctx.lineTo(width / 2, height);
+      ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2);
+      ctx.stroke();
+    }
+
+    // Initialize all three canvases
+    initCanvas('plane1');
+    initCanvas('plane2');
+    initCanvas('plane3');
+  </script>
 </body>
 </html>
