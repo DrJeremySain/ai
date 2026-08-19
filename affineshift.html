@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Affine Shift Cryptography - Dr. Jeremy Sain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              50: '#f2f8f5',
+              100: '#e1f0e8',
+              200: '#c3e1d2',
+              300: '#99cae1',
+              400: '#52b788',
+              500: '#2d6a4f',
+              600: '#1b4332',
+              700: '#143628',
+              800: '#0f291e',
+              900: '#081c15',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #081c15;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    
+    .forest-gradient {
+      background: linear-gradient(135deg, #1b4332 0%, #081c15 100%);
+    }
+
+    .forest-card {
+      background-color: #ffffff;
+      border: 2px solid #e1f0e8;
+      box-shadow: 0 4px 15px -3px rgba(27, 67, 50, 0.08);
+    }
+
+    textarea:focus, select:focus, input:focus {
+      outline: none;
+      border-color: #2d6a4f !important;
+      box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.2) !important;
+    }
+
+    .arrow-container {
+      position: relative;
+    }
+
+    .arrow-line {
+      height: 4px;
+      background-color: #2d6a4f;
+      width: 100%;
+      position: relative;
+    }
+
+    .arrow-right::after {
+      content: '';
+      position: absolute;
+      right: -2px;
+      top: -6px;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-left: 12px solid #2d6a4f;
+    }
+
+    .arrow-left::before {
+      content: '';
+      position: absolute;
+      left: -2px;
+      top: -6px;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 12px solid #2d6a4f;
+    }
+
+    /* Custom scrollbar for mathematical tables */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f2f8f5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2d6a4f;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-white">
+
+  <!-- Top Navigation / Header -->
+  <header class="forest-gradient text-white shadow-md border-b-4 border-emerald-400 px-4 sm:px-8 py-5">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="bg-emerald-500 text-forest-900 text-xs font-black uppercase px-2 py-0.5 rounded tracking-wider">MATH 3300</span>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Affine Shift Cryptography</h1>
+        </div>
+        <p class="text-emerald-200 text-xs sm:text-sm mt-1 font-medium">
+          Modular Arithmetic Transformation in $\mathbb{Z}_{29}$
+        </p>
+      </div>
+      
+      <!-- Upper Right Corner Designation -->
+      <div class="text-right bg-forest-800/80 px-4 py-2 rounded-lg border border-forest-500/40 shadow-inner">
+        <div class="text-xs text-emerald-300 font-semibold uppercase tracking-wider">Course Instructor</div>
+        <div class="text-lg font-bold text-white tracking-wide">Dr Jeremy Sain</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto w-full flex-grow p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
+
+    <!-- Control Panel: Parameter Selection (a and b) -->
+    <section class="forest-card rounded-2xl p-5 sm:p-6 bg-forest-50/40">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-forest-100 pb-4 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-forest-700 flex items-center gap-2">
+            <svg class="w-5 h-5 text-forest-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            Cryptographic Transformation Parameters
+          </h2>
+          <p class="text-xs sm:text-sm text-forest-800/70">
+            Select parameters $a$ and $b$ for the key. Modulus $M = 29$ (26 letters + space + period + comma).
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-forest-200 text-xs font-mono text-forest-800">
+          <span>Modulus $M = 29$ (Prime)</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+        <!-- Parameter A -->
+        <div class="flex flex-col gap-1">
+          <label for="paramA" class="text-xs font-bold uppercase text-forest-700 tracking-wider">
+            Multiplier ($a$)
+          </label>
+          <select id="paramA" class="bg-white border-2 border-forest-200 rounded-xl p-2.5 font-bold text-forest-800 cursor-pointer">
+            <!-- Populated via JS with values coprime to 29 (1..28) -->
+          </select>
+          <span class="text-[10px] text-forest-800/60 font-medium">Must be coprime to 29 ($\gcd(a, 29) = 1$)</span>
+        </div>
+
+        <!-- Parameter B -->
+        <div class="flex flex-col gap-1">
+          <label for="paramB" class="text-xs font-bold uppercase text-forest-700 tracking-wider">
+            Shift / Offset ($b$)
+          </label>
+          <select id="paramB" class="bg-white border-2 border-forest-200 rounded-xl p-2.5 font-bold text-forest-800 cursor-pointer">
+            <!-- Populated via JS with 0..28 -->
+          </select>
+          <span class="text-[10px] text-forest-800/60 font-medium">Additive constant ($0 \le b \le 28$)</span>
+        </div>
+
+        <!-- Computed Inverse C -->
+        <div class="flex flex-col gap-1 bg-white p-3 rounded-xl border border-forest-200 shadow-sm">
+          <span class="text-[10px] font-bold uppercase text-forest-600 tracking-wider">Multiplicative Inverse ($c = a^{-1}$)</span>
+          <div class="flex items-baseline gap-2">
+            <span id="displayC" class="text-xl font-black text-forest-600">1</span>
+            <span class="text-xs text-forest-800/60 font-mono">(mod 29)</span>
+          </div>
+          <span id="inverseEq" class="text-[10px] text-forest-800/70 font-mono">1 × 1 ≡ 1 (mod 29)</span>
+        </div>
+
+        <!-- Presets / Reset -->
+        <div class="flex flex-col gap-2 justify-end">
+          <button onclick="randomizeKeys()" class="w-full bg-forest-500 hover:bg-forest-600 active:bg-forest-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Randomize Keys
+          </button>
+          <button onclick="resetKeys()" class="w-full bg-white hover:bg-forest-100 text-forest-700 font-bold py-1.5 px-3 rounded-xl text-xs border border-forest-300 transition-colors">
+            Reset Default ($a=1, b=3$)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Interactive Workspace: Two Large Textboxes with Directional Arrows -->
+    <section class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-center">
+      
+      <!-- Left Box: Plaintext -->
+      <div class="lg:col-span-5 flex flex-col gap-2">
+        <div class="flex justify-between items-center px-1">
+          <label for="plaintext" class="text-sm font-black text-forest-800 uppercase tracking-wider flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+            Original Message (Plaintext $x$)
+          </label>
+          <button onclick="clearText('plaintext')" class="text-xs text-forest-600 hover:text-forest-800 font-semibold underline">Clear</button>
+        </div>
+        <textarea 
+          id="plaintext" 
+          rows="7"
+          placeholder="Type plaintext message here (e.g. hello dr sain, mathematics is fun.)"
+          class="w-full p-4 border-2 border-forest-200 rounded-2xl bg-white text-forest-900 font-mono text-base resize-y transition-all placeholder:text-slate-400 placeholder:font-sans"
+        >hello dr sain, mathematics is fun.</textarea>
+        <div class="flex justify-between items-center text-xs text-forest-800/60 px-1 font-mono">
+          <span id="plainCharCount">Chars: 0</span>
+          <span>Valid Chars: a-z, space, period, comma</span>
+        </div>
+      </div>
+
+      <!-- Center Box: Directional Transformation Arrows & Formulas -->
+      <div class="lg:col-span-1 flex flex-col items-center justify-center gap-6 py-4 lg:py-0">
+        
+        <!-- Forward Transformation Arrow (Right) -->
+        <div class="w-full flex flex-col items-center gap-1">
+          <span id="forwardLabel" class="text-xs font-black text-forest-600 bg-forest-100 px-2 py-1 rounded-md text-center font-mono shadow-sm">
+            $x \to ax+b$
+          </span>
+          <div class="w-full px-2">
+            <div class="arrow-container w-full">
+              <div class="arrow-line arrow-right"></div>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold text-forest-500 uppercase tracking-widest">Encrypt</span>
+        </div>
+
+        <!-- Inverse Transformation Arrow (Left) -->
+        <div class="w-full flex flex-col items-center gap-1">
+          <span class="text-[10px] font-bold text-forest-500 uppercase tracking-widest">Decrypt</span>
+          <div class="w-full px-2">
+            <div class="arrow-container w-full">
+              <div class="arrow-line arrow-left"></div>
+            </div>
+          </div>
+          <span id="inverseLabel" class="text-xs font-black text-forest-600 bg-forest-100 px-2 py-1 rounded-md text-center font-mono shadow-sm">
+            $c(x-b)$
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Right Box: Ciphertext -->
+      <div class="lg:col-span-5 flex flex-col gap-2">
+        <div class="flex justify-between items-center px-1">
+          <label for="ciphertext" class="text-sm font-black text-forest-800 uppercase tracking-wider flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-forest-600 inline-block"></span>
+            Encrypted Message (Ciphertext $y$)
+          </label>
+          <button onclick="clearText('ciphertext')" class="text-xs text-forest-600 hover:text-forest-800 font-semibold underline">Clear</button>
+        </div>
+        <textarea 
+          id="ciphertext" 
+          rows="7"
+          placeholder="Type encrypted message here to decrypt back..."
+          class="w-full p-4 border-2 border-forest-200 rounded-2xl bg-white text-forest-900 font-mono text-base resize-y transition-all placeholder:text-slate-400 placeholder:font-sans"
+        ></textarea>
+        <div class="flex justify-between items-center text-xs text-forest-800/60 px-1 font-mono">
+          <span id="cipherCharCount">Chars: 0</span>
+          <span id="activeDirectionBadge" class="font-bold text-forest-600">Active: Encrypting Left → Right</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Educational Inspector: Character Mapping & Step-by-Step Modular Math Breakdown -->
+    <section class="forest-card rounded-2xl p-5 sm:p-6 bg-white mt-2">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-forest-100 pb-3 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-forest-800 flex items-center gap-2">
+            <svg class="w-5 h-5 text-forest-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            Step-by-Step Algebraic Calculation Inspector
+          </h3>
+          <p class="text-xs text-forest-800/60">
+            Examining the individual modular calculations for the active message.
+          </p>
+        </div>
+        <div id="inspectorSummary" class="text-xs font-mono bg-forest-50 text-forest-700 px-3 py-1.5 rounded-lg border border-forest-200">
+          Formula: $E(x) = (a \cdot x + b) \pmod{29}$
+        </div>
+      </div>
+
+      <!-- Scrollable Calculations Table -->
+      <div class="overflow-x-auto max-h-64 overflow-y-auto rounded-xl border border-forest-100">
+        <table class="w-full text-left border-collapse text-xs font-mono">
+          <thead class="sticky top-0 bg-forest-600 text-white uppercase text-[10px] tracking-wider">
+            <tr>
+              <th class="py-2.5 px-3">Pos</th>
+              <th class="py-2.5 px-3">Input Char</th>
+              <th class="py-2.5 px-3">Input Value ($x$)</th>
+              <th class="py-2.5 px-3">Transformation Formula</th>
+              <th class="py-2.5 px-3">Raw Math</th>
+              <th class="py-2.5 px-3">Mod 29 Result</th>
+              <th class="py-2.5 px-3">Output Char</th>
+            </tr>
+          </thead>
+          <tbody id="mathTableBody" class="divide-y divide-forest-100 bg-white">
+            <!-- Dynamically filled with step-by-step math -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Alphabet Mapping Reference Key -->
+    <section class="forest-card rounded-2xl p-5 bg-forest-50/20">
+      <h3 class="text-xs font-bold text-forest-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-forest-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Alphabet Mapping Key ($\mathbb{Z}_{29}$)
+      </h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-2 text-center text-xs font-mono">
+        <!-- Javascript populates 0..28 key cards -->
+        <div id="mappingGrid" class="contents"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-forest-900 text-emerald-200 text-xs py-4 px-6 border-t border-forest-700 mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div>
+        <strong>Department of Mathematics</strong> — Abstract Algebra & Cryptography Demonstration
+      </div>
+      <div class="text-emerald-400 font-mono">
+        Designed for Classroom Instruction • Dr Jeremy Sain
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* 
+     * AFFINE CRYPTOGRAPHY LOGIC
+     * Modulus = 29
+     * Mapping:
+     *   ',' (comma) -> 0
+     *   'a'..'z' -> 1..26
+     *   ' ' (space) -> 27
+     *   '.' (period) -> 28
+     */
+
+    const MODULUS = 29;
+
+    // Active state
+    let activeDirection = 'encrypt'; // 'encrypt' (left -> right) or 'decrypt' (right -> left)
+
+    // DOM Elements
+    const paramASelect = document.getElementById('paramA');
+    const paramBSelect = document.getElementById('paramB');
+    const displayCElem = document.getElementById('displayC');
+    const inverseEqElem = document.getElementById('inverseEq');
+
+    const plaintextArea = document.getElementById('plaintext');
+    const ciphertextArea = document.getElementById('ciphertext');
+    
+    const plainCharCount = document.getElementById('plainCharCount');
+    const cipherCharCount = document.getElementById('cipherCharCount');
+    const activeDirectionBadge = document.getElementById('activeDirectionBadge');
+
+    const forwardLabel = document.getElementById('forwardLabel');
+    const inverseLabel = document.getElementById('inverseLabel');
+
+    const mathTableBody = document.getElementById('mathTableBody');
+    const mappingGrid = document.getElementById('mappingGrid');
+    const inspectorSummary = document.getElementById('inspectorSummary');
+
+    // --- MATHEMATICAL HELPERS ---
+
+    // Convert Character to Number (0..28)
+    function charToNum(ch) {
+      if (!ch) return null;
+      const lower = ch.toLowerCase();
+      if (lower === ',') return 0;
+      if (lower >= 'a' && lower <= 'z') return lower.charCodeAt(0) - 96; // 'a'=1, 'z'=26
+      if (lower === ' ') return 27;
+      if (lower === '.') return 28;
+      return null; // Unsupported char
+    }
+
+    // Convert Number (0..28) to Character
+    function numToChar(n) {
+      n = ((n % MODULUS) + MODULUS) % MODULUS; // Positive modulo
+      if (n === 0) return ',';
+      if (n >= 1 && n <= 26) return String.fromCharCode(n + 96);
+      if (n === 27) return ' ';
+      if (n === 28) return '.';
+      return '?';
+    }
+
+    // Display string representation of character (for visual clarity)
+    function charDisplay(ch) {
+      if (ch === ' ') return '[space]';
+      if (ch === '.') return '.';
+      if (ch === ',') return ',';
+      return ch;
+    }
+
+    // Calculate Modular Multiplicative Inverse of a modulo 29
+    function getModInverse(a, m = 29) {
+      a = ((a % m) + m) % m;
+      for (let x = 1; x < m; x++) {
+        if ((a * x) % m === 1) return x;
+      }
+      return 1;
+    }
+
+    // --- INITIALIZATION & CONTROLS ---
+
+    function initControls() {
+      // Populate A select (Coprime to 29 -> 1..28)
+      paramASelect.innerHTML = '';
+      for (let a = 1; a < MODULUS; a++) {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = `a = ${a}`;
+        if (a === 1) opt.selected = true; // default
+        paramASelect.appendChild(opt);
+      }
+
+      // Populate B select (0..28)
+      paramBSelect.innerHTML = '';
+      for (let b = 0; b < MODULUS; b++) {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = `b = ${b}`;
+        if (b === 3) opt.selected = true; // default shift 3
+        paramBSelect.appendChild(opt);
+      }
+
+      // Render Alphabet Reference Key
+      mappingGrid.innerHTML = '';
+      for (let i = 0; i < MODULUS; i++) {
+        const card = document.createElement('div');
+        card.className = "bg-white p-1.5 rounded-lg border border-forest-200 flex flex-col items-center justify-center shadow-xs";
+        const char = numToChar(i);
+        card.innerHTML = `
+          <span class="text-forest-600 font-bold text-sm">${charDisplay(char)}</span>
+          <span class="text-[10px] text-forest-800/50 font-mono">${i}</span>
+        `;
+        mappingGrid.appendChild(card);
+      }
+
+      // Event Listeners for Key changes
+      paramASelect.addEventListener('change', updateTransformation);
+      paramBSelect.addEventListener('change', updateTransformation);
+
+      // Event Listeners for Text areas
+      plaintextArea.addEventListener('input', () => {
+        activeDirection = 'encrypt';
+        updateTransformation();
+      });
+
+      ciphertextArea.addEventListener('input', () => {
+        activeDirection = 'decrypt';
+        updateTransformation();
+      });
+
+      // Initial run
+      updateTransformation();
+    }
+
+    function randomizeKeys() {
+      const validAs = Array.from({length: 28}, (_, i) => i + 1);
+      const randomA = validAs[Math.floor(Math.random() * validAs.length)];
+      const randomB = Math.floor(Math.random() * MODULUS);
+
+      paramASelect.value = randomA;
+      paramBSelect.value = randomB;
+      updateTransformation();
+    }
+
+    function resetKeys() {
+      paramASelect.value = 1;
+      paramBSelect.value = 3;
+      updateTransformation();
+    }
+
+    function clearText(target) {
+      if (target === 'plaintext') {
+        plaintextArea.value = '';
+        activeDirection = 'encrypt';
+      } else {
+        ciphertextArea.value = '';
+        activeDirection = 'decrypt';
+      }
+      updateTransformation();
+    }
+
+    // --- MAIN TRANSFORMATION ENGINE ---
+
+    function updateTransformation() {
+      const a = parseInt(paramASelect.value, 10);
+      const b = parseInt(paramBSelect.value, 10);
+      const c = getModInverse(a, MODULUS);
+
+      // Update inverse display info
+      displayCElem.textContent = c;
+      inverseEqElem.textContent = `${a} × ${c} = ${a*c} ≡ 1 (mod 29)`;
+
+      // Update Arrow Labels
+      forwardLabel.textContent = `${a}x + ${b} (mod 29)`;
+      inverseLabel.textContent = `${c}(y - ${b}) (mod 29)`;
+
+      // Update Active Badge
+      if (activeDirection === 'encrypt') {
+        activeDirectionBadge.textContent = "Active: Encrypting Left → Right";
+        activeDirectionBadge.className = "font-bold text-emerald-600";
+        inspectorSummary.textContent = `Formula: E(x) = (${a}x + ${b}) mod 29`;
+      } else {
+        activeDirectionBadge.textContent = "Active: Decrypting Right → Left";
+        activeDirectionBadge.className = "font-bold text-forest-600";
+        inspectorSummary.textContent = `Formula: D(y) = ${c}(y - ${b}) mod 29`;
+      }
+
+      mathTableBody.innerHTML = '';
+
+      if (activeDirection === 'encrypt') {
+        const text = plaintextArea.value;
+        plainCharCount.textContent = `Chars: ${text.length}`;
+        let encryptedText = '';
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          const x = charToNum(ch);
+
+          if (x === null) {
+            // Keep unsupported character as is
+            encryptedText += ch;
+            addMathRow(i, ch, 'N/A', 'Unsupported / Ignored', 'N/A', 'N/A', ch);
+          } else {
+            const rawMath = a * x + b;
+            const resMod = ((rawMath % MODULUS) + MODULUS) % MODULUS;
+            const outChar = numToChar(resMod);
+            encryptedText += outChar;
+
+            const formulaStr = `${a}(${x}) + ${b}`;
+            addMathRow(i, charDisplay(ch), x, formulaStr, rawMath, resMod, charDisplay(outChar));
+          }
+        }
+
+        ciphertextArea.value = encryptedText;
+        cipherCharCount.textContent = `Chars: ${encryptedText.length}`;
+
+      } else {
+        // Decrypt Direction
+        const text = ciphertextArea.value;
+        cipherCharCount.textContent = `Chars: ${text.length}`;
+        let decryptedText = '';
+
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          const y = charToNum(ch);
+
+          if (y === null) {
+            decryptedText += ch;
+            addMathRow(i, ch, 'N/A', 'Unsupported / Ignored', 'N/A', 'N/A', ch);
+          } else {
+            const diff = y - b;
+            const rawMath = c * diff;
+            const resMod = ((rawMath % MODULUS) + MODULUS) % MODULUS;
+            const outChar = numToChar(resMod);
+            decryptedText += outChar;
+
+            const formulaStr = `${c}(${y} - ${b})`;
+            addMathRow(i, charDisplay(ch), y, formulaStr, `${c} × (${diff}) = ${rawMath}`, resMod, charDisplay(outChar));
+          }
+        }
+
+        plaintextArea.value = decryptedText;
+        plainCharCount.textContent = `Chars: ${decryptedText.length}`;
+      }
+    }
+
+    // Helper to add a row to the step-by-step inspector table
+    function addMathRow(pos, inChar, inVal, formula, rawMath, modRes, outChar) {
+      const tr = document.createElement('tr');
+      tr.className = pos % 2 === 0 ? "bg-white hover:bg-forest-50" : "bg-forest-50/50 hover:bg-forest-50";
+
+      tr.innerHTML = `
+        <td class="py-1.5 px-3 font-semibold text-slate-400">${pos + 1}</td>
+        <td class="py-1.5 px-3 font-bold text-forest-800">${inChar}</td>
+        <td class="py-1.5 px-3 text-forest-700">${inVal}</td>
+        <td class="py-1.5 px-3 text-forest-600 font-semibold">${formula}</td>
+        <td class="py-1.5 px-3 text-slate-600">${rawMath}</td>
+        <td class="py-1.5 px-3 font-bold text-emerald-600">${modRes}</td>
+        <td class="py-1.5 px-3 font-black text-forest-900 bg-forest-100/50">${outChar}</td>
+      `;
+
+      mathTableBody.appendChild(tr);
+    }
+
+    // Initialize application on window load
+    window.onload = function() {
+      initControls();
+    };
+  </script>
+</body>
+</html>
