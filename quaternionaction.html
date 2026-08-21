@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quaternion Rotations on ℝ³ - Dr. Jeremy Sain</title>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- MathJax for nice LaTeX rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    
+    <style>
+        :root {
+            --forest-green: #1e4d2b;
+            --forest-green-dark: #13331c;
+            --forest-green-light: #2d7040;
+            --forest-green-pale: #eaf3ed;
+            --accent-gold: #d4af37;
+            --bg-white: #ffffff;
+            --text-color: #222222;
+            --border-color: #d1dcd4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-white);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--forest-green);
+            color: var(--bg-white);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        header .author {
+            font-size: 1.1rem;
+            font-weight: 500;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        /* App Subheading */
+        .subheading {
+            background-color: var(--forest-green-pale);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 24px;
+            font-size: 0.95rem;
+            color: var(--forest-green-dark);
+            text-align: center;
+        }
+
+        /* Main Container: 3 Columns */
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 16px;
+            flex: 1;
+            min-height: 600px;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-white);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(30, 77, 43, 0.05);
+            transition: border-color 0.2s;
+        }
+
+        .panel:hover {
+            border-color: var(--forest-green-light);
+        }
+
+        .panel-header {
+            background-color: var(--forest-green);
+            color: white;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 12px;
+        }
+
+        /* Canvas Wrapper */
+        .viewport-wrapper {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            background-color: #f8faf8;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .viewport-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .viewport-overlay {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+            pointer-events: none;
+            border: 1px solid #ddd;
+            color: var(--forest-green-dark);
+        }
+
+        /* Controls and Math Cards */
+        .control-group {
+            background: var(--forest-green-pale);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--forest-green-dark);
+        }
+
+        input[type="range"] {
+            flex: 1;
+            margin: 0 12px;
+            accent-color: var(--forest-green);
+            cursor: pointer;
+        }
+
+        select, button {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--forest-green);
+            background-color: var(--bg-white);
+            color: var(--forest-green-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:hover, button:hover {
+            background-color: var(--forest-green);
+            color: white;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-weight: bold;
+            min-width: 45px;
+            text-align: right;
+            color: var(--forest-green-dark);
+        }
+
+        /* Formulas & Data Display */
+        .math-card {
+            background-color: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--forest-green);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+
+        .math-card div {
+            margin-bottom: 4px;
+        }
+
+        .math-card div:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Global Controls Bar */
+        .toolbar {
+            background-color: var(--forest-green-pale);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            background-color: var(--forest-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action:hover {
+            background-color: var(--forest-green-dark);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--forest-green-dark);
+            user-select: none;
+        }
+
+        /* Instructions Footer */
+        .explanation-section {
+            padding: 20px 24px;
+            background-color: #fafdfb;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .explanation-section h3 {
+            color: var(--forest-green);
+            margin-bottom: 8px;
+        }
+
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .explanation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Vector coordinate inputs */
+        .vector-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .vec-field {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+        }
+
+        .vec-field input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Quaternion Action on ℝ³ via Conjugation ($x \mapsto a x a^{-1}$)</h1>
+        <div class="author">Dr Jeremy Sain</div>
+    </header>
+
+    <div class="subheading">
+        Visualizing 3D Rotations: Non-zero quaternion $a = q_0 + q_1\mathbf{i} + q_2\mathbf{j} + q_3\mathbf{k}$ acting on spatial vectors $x \in \mathbb{R}^3 \cong \text{Im}(\mathbb{H})$.
+    </div>
+
+    <!-- Global Toolbar -->
+    <div class="toolbar">
+        <div>
+            <label for="shape-select">Select 3D Geometry: </label>
+            <select id="shape-select">
+                <option value="cube">Color-Coded Cube</option>
+                <option value="tetrahedron">Tetrahedron</option>
+                <option value="octahedron">Octahedron</option>
+                <option value="arrow">Asymmetric Arrow (Orientation Marker)</option>
+                <option value="axes">3D Coordinate Frame (XYZ Axes)</option>
+                <option value="grid_cube">Wireframe Box Frame</option>
+                <option value="teapot">Utah Teapot Geometry</option>
+            </select>
+        </div>
+
+        <button id="btn-animate" class="btn-action">
+            <span id="anim-icon">▶</span> Animate Rotation
+        </button>
+
+        <button id="btn-reset" class="btn-action" style="background-color: #555;">
+            ↺ Reset Quaternion to Identity
+        </button>
+
+        <label class="checkbox-label">
+            <input type="checkbox" id="sync-cameras" checked> Sync Camera Angles Across Panels
+        </label>
+
+        <label class="checkbox-label">
+            <input type="checkbox" id="show-ghost" checked> Show Original Ghost Overlay in Panel 3
+        </label>
+    </div>
+
+    <!-- Main 3-Panel Layout -->
+    <div class="app-container">
+        
+        <!-- PANEL 1: Quaternion Specification -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Panel 1: Quaternion $a = q_0 + \mathbf{v}$</span>
+                <span style="font-size:0.8rem; font-weight:normal;">Control Space</span>
+            </div>
+            <div class="panel-content">
+                
+                <!-- Real Part Slider -->
+                <div class="control-group">
+                    <div class="control-row">
+                        <label for="slider-q0">Real Scalar $q_0$ (cos $\frac{\theta}{2}$):</label>
+                        <span id="disp-q0" class="value-display">1.00</span>
+                    </div>
+                    <input type="range" id="slider-q0" min="-2" max="2" step="0.02" value="1.0">
+                </div>
+
+                <!-- 3D Vector Visualizer/Picker -->
+                <div class="viewport-wrapper">
+                    <div id="canvas-panel1" class="viewport-canvas"></div>
+                    <div class="viewport-overlay">Vector Part $\mathbf{v} = (q_1, q_2, q_3)$</div>
+                </div>
+
+                <!-- Manual Vector Input Fields -->
+                <div class="control-group">
+                    <label>Vector Part Components $\mathbf{v} = q_1\mathbf{i} + q_2\mathbf{j} + q_3\mathbf{k}$:</label>
+                    <div class="vector-inputs">
+                        <div class="vec-field">
+                            <span style="color:#d9534f; font-weight:bold;">i:</span>
+                            <input type="number" id="input-q1" step="0.1" value="0.0">
+                        </div>
+                        <div class="vec-field">
+                            <span style="color:#5cb85c; font-weight:bold;">j:</span>
+                            <input type="number" id="input-q2" step="0.1" value="1.0">
+                        </div>
+                        <div class="vec-field">
+                            <span style="color:#0275d8; font-weight:bold;">k:</span>
+                            <input type="number" id="input-q3" step="0.1" value="0.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mathematical Readout -->
+                <div class="math-card" id="math-readout-a">
+                    <div><strong>Full Quaternion:</strong> <span id="math-q-full">a = 1.00 + 0.00i + 1.00j + 0.00k</span></div>
+                    <div><strong>Norm $\|a\|$:</strong> <span id="math-q-norm">1.414</span></div>
+                    <div><strong>Normalized $\hat{a} = a/\|a\|$:</strong> <span id="math-q-unit">0.707 + 0.00i + 0.707j + 0.00k</span></div>
+                    <div><strong>Equivalent Rotation Angle $\theta$:</strong> <span id="math-q-angle">90.0°</span></div>
+                    <div><strong>Rotation Axis $\mathbf{u}$:</strong> <span id="math-q-axis">(0.00, 1.00, 0.00)</span></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PANEL 2: Original 3D Shape -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Panel 2: Original Shape ($x \in \mathbb{R}^3$)</span>
+                <span style="font-size:0.8rem; font-weight:normal;">Un-transformed</span>
+            </div>
+            <div class="panel-content">
+                
+                <div class="viewport-wrapper" style="height: 100%; min-height: 420px;">
+                    <div id="canvas-panel2" class="viewport-canvas"></div>
+                    <div class="viewport-overlay">Input Domain $\mathbb{R}^3$</div>
+                </div>
+
+                <div class="math-card">
+                    <div><strong>Domain:</strong> Purely imaginary quaternions $x = x_1\mathbf{i} + x_2\mathbf{j} + x_3\mathbf{k} \in \text{Im}(\mathbb{H})$.</div>
+                    <div><strong>Properties:</strong> Drag with mouse to orbit around the geometry. Notice fixed reference axes (Red = X, Green = Y, Blue = Z).</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PANEL 3: Transformed Shape -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Panel 3: Conjugated Shape ($x' = a x a^{-1}$)</span>
+                <span style="font-size:0.8rem; font-weight:normal;">Action Result</span>
+            </div>
+            <div class="panel-content">
+                
+                <div class="viewport-wrapper" style="height: 100%; min-height: 420px;">
+                    <div id="canvas-panel3" class="viewport-canvas"></div>
+                    <div class="viewport-overlay">Output Range $\mathbb{R}^3$</div>
+                </div>
+
+                <div class="math-card">
+                    <div><strong>Conjugation Formula:</strong> $x' = a x a^{-1} = \hat{a} x \hat{a}^{-1}$</div>
+                    <div><strong>Geometric Result:</strong> Rigid rotation by angle $\theta = 2 \arccos(q_0/\|a\|)$ about axis $\mathbf{u} = \mathbf{v}/\|\mathbf{v}\|$.</div>
+                    <div><strong>Isometry:</strong> $\|x'\| = \|x\|$ and $\langle x', y' \rangle = \langle x, y \rangle$ (preserves distances and angles).</div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mathematical Explanation Section -->
+    <div class="explanation-section">
+        <h3>Mathematical Context: Quaternions as 3D Rotations</h3>
+        <p>
+            The quaternions $\mathbb{H}$ form a 4-dimensional associative division algebra over $\mathbb{R}$ spanned by $\{1, \mathbf{i}, \mathbf{j}, \mathbf{k}\}$ with fundamental relation $\mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1$.
+            We identify 3-space $\mathbb{R}^3$ with the subspace of <em>pure imaginary quaternions</em> $\text{Im}(\mathbb{H}) = \{ x_1\mathbf{i} + x_2\mathbf{j} + x_3\mathbf{k} \mid x_i \in \mathbb{R} \}$.
+        </p>
+
+        <div class="explanation-grid">
+            <div class="math-card">
+                <strong>Why Conjugation $x \mapsto a x a^{-1}$?</strong>
+                <ul>
+                    <li>If $x \in \text{Im}(\mathbb{H})$ and $a \in \mathbb{H} \setminus \{0\}$, the conjugated quaternion $x' = a x a^{-1}$ is guaranteed to remain purely imaginary ($x' \in \text{Im}(\mathbb{H})$). Thus, conjugation maps $\mathbb{R}^3 \to \mathbb{R}^3$.</li>
+                    <li>Conjugation preserves the quaternion norm: $\|x'\| = \|a x a^{-1}\| = \|a\| \|x\| \|a\|^{-1} = \|x\|$. Therefore, it acts as an isometry (rigid rotation) on $\mathbb{R}^3$.</li>
+                    <li>Scaling $a$ by any real factor $c \neq 0$ leaves the action unchanged: $(c a) x (c a)^{-1} = c a x c^{-1} a^{-1} = a x a^{-1}$. Hence, every non-zero quaternion acts identically to its unit counterpart $\hat{a} = a/\|a\|$.</li>
+                </ul>
+            </div>
+
+            <div class="math-card">
+                <strong>Connection to Euler's Axis-Angle Parameterization</strong>
+                <ul>
+                    <li>Any unit quaternion can be written as $\hat{a} = \cos(\theta/2) + \mathbf{u} \sin(\theta/2)$, where $\mathbf{u} = u_1\mathbf{i} + u_2\mathbf{j} + u_3\mathbf{k}$ is a unit vector in $\mathbb{R}^3$.</li>
+                    <li>The transformation $x \mapsto \hat{a} x \hat{a}^{-1}$ corresponds to a spatial rotation of the vector $x$ about the axis $\mathbf{u}$ by an angle of <strong>$\theta$</strong> (counter-clockwise by right-hand rule).</li>
+                    <li>Notice the double cover phenomenon: $\hat{a}$ and $-\hat{a}$ produce the exact same rotation on $\mathbb{R}^3$, giving the 2-to-1 group homomorphism $Sp(1) \to SO(3)$.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic Javascript -->
+    <script>
+        // --- QUATERNION MATH HELPER FUNCTIONS ---
+        class Quat {
+            constructor(w, x, y, z) {
+                this.w = w; // Real / Scalar
+                this.x = x; // i
+                this.y = y; // j
+                this.z = z; // k
+            }
+
+            norm() {
+                return Math.sqrt(this.w*this.w + this.x*this.x + this.y*this.y + this.z*this.z);
+            }
+
+            normalize() {
+                let n = this.norm();
+                if (n < 1e-8) return new Quat(1, 0, 0, 0);
+                return new Quat(this.w/n, this.x/n, this.y/n, this.z/n);
+            }
+
+            // Quaternion Multiplication: this * q
+            multiply(q) {
+                return new Quat(
+                    this.w*q.w - this.x*q.x - this.y*q.y - this.z*q.z,
+                    this.w*q.x + this.x*q.w + this.y*q.z - this.z*q.y,
+                    this.w*q.y - this.x*q.z + this.y*q.w + this.z*q.x,
+                    this.w*q.z + this.x*q.y - this.y*q.x + this.z*q.w
+                );
+            }
+
+            conjugate() {
+                return new Quat(this.w, -this.x, -this.y, -this.z);
+            }
+
+            inverse() {
+                let n2 = this.w*this.w + this.x*this.x + this.y*this.y + this.z*this.z;
+                if (n2 < 1e-12) return new Quat(1, 0, 0, 0);
+                let conj = this.conjugate();
+                return new Quat(conj.w/n2, conj.x/n2, conj.y/n2, conj.z/n2);
+            }
+
+            // Conjugate action on 3D vector v = (x,y,z): a * (0,v) * a^-1
+            actOnVector(v) {
+                let px = new Quat(0, v.x, v.y, v.z);
+                let inv = this.inverse();
+                let res = this.multiply(px).multiply(inv);
+                return new THREE.Vector3(res.x, res.y, res.z);
+            }
+
+            toThreeQuaternion() {
+                let u = this.normalize();
+                return new THREE.Quaternion(u.x, u.y, u.z, u.w);
+            }
+        }
+
+        // --- GLOBAL APP STATE ---
+        const state = {
+            q0: 1.0,
+            q1: 0.0,
+            q2: 1.0,
+            q3: 0.0,
+            currentShape: 'cube',
+            animating: false,
+            syncCameras: true,
+            showGhost: true
+        };
+
+        // Get current active quaternion 'a'
+        function getA() {
+            return new Quat(state.q0, state.q1, state.q2, state.q3);
+        }
+
+        // --- THREE.JS SCENE MANAGEMENT ---
+        let scene1, camera1, renderer1, controls1;
+        let scene2, camera2, renderer2, controls2;
+        let scene3, camera3, renderer3, controls3;
+
+        // Visual objects references
+        let vecArrowMesh, rotationAxisLine, rotationArcMesh;
+        let shapeGroup2 = new THREE.Group();
+        let shapeGroup3 = new THREE.Group();
+        let ghostGroup3 = new THREE.Group();
+
+        // Colors
+        const COLOR_FOREST = 0x1e4d2b;
+        const COLOR_ACCENT = 0xd4af37;
+        const COLOR_AXIS_X = 0xd9534f;
+        const COLOR_AXIS_Y = 0x5cb85c;
+        const COLOR_AXIS_Z = 0x0275d8;
+
+        function initScenes() {
+            // Container dimensions
+            const p1El = document.getElementById('canvas-panel1');
+            const p2El = document.getElementById('canvas-panel2');
+            const p3El = document.getElementById('canvas-panel3');
+
+            // --- SCENE 1 ---
+            scene1 = new THREE.Scene();
+            scene1.background = new THREE.Color(0xf6faf7);
+            camera1 = new THREE.PerspectiveCamera(45, p1El.clientWidth / p1El.clientHeight, 0.1, 100);
+            camera1.position.set(3.5, 3.0, 4.5);
+            renderer1 = new THREE.WebGLRenderer({ antialias: true });
+            renderer1.setSize(p1El.clientWidth, p1El.clientHeight);
+            p1El.appendChild(renderer1.domElement);
+            controls1 = new THREE.OrbitControls(camera1, renderer1.domElement);
+            controls1.enableDamping = true;
+
+            // --- SCENE 2 ---
+            scene2 = new THREE.Scene();
+            scene2.background = new THREE.Color(0xf6faf7);
+            camera2 = new THREE.PerspectiveCamera(45, p2El.clientWidth / p2El.clientHeight, 0.1, 100);
+            camera2.position.set(3.5, 3.0, 4.5);
+            renderer2 = new THREE.WebGLRenderer({ antialias: true });
+            renderer2.setSize(p2El.clientWidth, p2El.clientHeight);
+            p2El.appendChild(renderer2.domElement);
+            controls2 = new THREE.OrbitControls(camera2, renderer2.domElement);
+            controls2.enableDamping = true;
+
+            // --- SCENE 3 ---
+            scene3 = new THREE.Scene();
+            scene3.background = new THREE.Color(0xf6faf7);
+            camera3 = new THREE.PerspectiveCamera(45, p3El.clientWidth / p3El.clientHeight, 0.1, 100);
+            camera3.position.set(3.5, 3.0, 4.5);
+            renderer3 = new THREE.WebGLRenderer({ antialias: true });
+            renderer3.setSize(p3El.clientWidth, p3El.clientHeight);
+            p3El.appendChild(renderer3.domElement);
+            controls3 = new THREE.OrbitControls(camera3, renderer3.domElement);
+            controls3.enableDamping = true;
+
+            // Sync Camera Controls
+            controls1.addEventListener('change', () => syncCam(camera1, [camera2, camera3]));
+            controls2.addEventListener('change', () => syncCam(camera2, [camera1, camera3]));
+            controls3.addEventListener('change', () => syncCam(camera3, [camera1, camera2]));
+
+            // Add Lights to Scenes
+            [scene1, scene2, scene3].forEach(sc => {
+                let ambLight = new THREE.AmbientLight(0xffffff, 0.7);
+                sc.add(ambLight);
+                let dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+                dirLight.position.set(5, 10, 7);
+                sc.add(dirLight);
+            });
+
+            // Setup Helpers (Coordinate Grids & Axes)
+            setupPanel1Content();
+            
+            scene2.add(shapeGroup2);
+            scene2.add(createCoordinateFrame(2.0));
+
+            scene3.add(shapeGroup3);
+            scene3.add(ghostGroup3);
+            scene3.add(createCoordinateFrame(2.0));
+
+            // Load Initial Shape
+            updateSelectedShape();
+
+            // Handle Resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function syncCam(sourceCam, targetCams) {
+            if (!state.syncCameras) return;
+            targetCams.forEach(target => {
+                target.position.copy(sourceCam.position);
+                target.rotation.copy(sourceCam.rotation);
+                target.zoom = sourceCam.zoom;
+                target.updateProjectionMatrix();
+            });
+        }
+
+        function createCoordinateFrame(size = 2.0) {
+            let group = new THREE.Group();
+            
+            // X Axis - Red
+            let xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), size, COLOR_AXIS_X, 0.2, 0.1);
+            // Y Axis - Green
+            let yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), size, COLOR_AXIS_Y, 0.2, 0.1);
+            // Z Axis - Blue
+            let zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), size, COLOR_AXIS_Z, 0.2, 0.1);
+
+            group.add(xArrow, yArrow, zArrow);
+
+            // Subtle Grid
+            let grid = new THREE.GridHelper(4, 8, 0xcccccc, 0xe8e8e8);
+            grid.position.y = -0.01;
+            group.add(grid);
+
+            return group;
+        }
+
+        // Setup Panel 1: Vector Part Vector & Axis Visualization
+        function setupPanel1Content() {
+            scene1.add(createCoordinateFrame(1.8));
+
+            // Vector arrow for v = (q1, q2, q3)
+            vecArrowMesh = new THREE.ArrowHelper(
+                new THREE.Vector3(0,1,0),
+                new THREE.Vector3(0,0,0),
+                1.0,
+                COLOR_FOREST,
+                0.25,
+                0.15
+            );
+            vecArrowMesh.line.material.linewidth = 3;
+            scene1.add(vecArrowMesh);
+
+            // Infinite line showing rotation axis
+            let axisGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, -5, 0),
+                new THREE.Vector3(0, 5, 0)
+            ]);
+            let axisMat = new THREE.LineDashedMaterial({
+                color: COLOR_ACCENT,
+                dashSize: 0.1,
+                gapSize: 0.05,
+                linewidth: 2
+            });
+            rotationAxisLine = new THREE.Line(axisGeo, axisMat);
+            rotationAxisLine.computeLineDistances();
+            scene1.add(rotationAxisLine);
+        }
+
+        // --- GEOMETRY GENERATOR FUNCTIONS ---
+        function createShapeGeometry(type, isGhost = false) {
+            let group = new THREE.Group();
+            let opacity = isGhost ? 0.2 : 0.85;
+            let transparent = true;
+
+            let mainMat = new THREE.MeshStandardMaterial({
+                color: isGhost ? 0x999999 : COLOR_FOREST,
+                roughness: 0.3,
+                metalness: 0.1,
+                opacity: opacity,
+                transparent: transparent,
+                side: THREE.DoubleSide
+            });
+
+            let wireMat = new THREE.LineBasicMaterial({
+                color: isGhost ? 0xaaaaaa : 0x0f2b18,
+                linewidth: 1.5,
+                opacity: isGhost ? 0.3 : 1.0,
+                transparent: isGhost
+            });
+
+            if (type === 'cube') {
+                // Multi-colored faces cube to clearly show orientation
+                let materials = isGhost ? mainMat : [
+                    new THREE.MeshStandardMaterial({ color: 0xd9534f }), // +X red
+                    new THREE.MeshStandardMaterial({ color: 0xb52b27 }), // -X
+                    new THREE.MeshStandardMaterial({ color: 0x5cb85c }), // +Y green
+                    new THREE.MeshStandardMaterial({ color: 0x3d8b3d }), // -Y
+                    new THREE.MeshStandardMaterial({ color: 0x0275d8 }), // +Z blue
+                    new THREE.MeshStandardMaterial({ color: 0x014c8c })  // -Z
+                ];
+                let geo = new THREE.BoxGeometry(1.4, 1.4, 1.4);
+                let mesh = new THREE.Mesh(geo, materials);
+                let edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), wireMat);
+                group.add(mesh, edges);
+            } 
+            else if (type === 'tetrahedron') {
+                let geo = new THREE.TetrahedronGeometry(1.2);
+                let mesh = new THREE.Mesh(geo, mainMat);
+                let edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), wireMat);
+                group.add(mesh, edges);
+            }
+            else if (type === 'octahedron') {
+                let geo = new THREE.OctahedronGeometry(1.2);
+                let mesh = new THREE.Mesh(geo, mainMat);
+                let edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), wireMat);
+                group.add(mesh, edges);
+            }
+            else if (type === 'arrow') {
+                // Asymmetric orientation marker
+                let arrowGroup = new THREE.Group();
+                let stemGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 16);
+                let stemMesh = new THREE.Mesh(stemGeo, mainMat);
+                stemMesh.position.y = 0.75;
+
+                let coneGeo = new THREE.ConeGeometry(0.25, 0.5, 16);
+                let coneMesh = new THREE.Mesh(coneGeo, new THREE.MeshStandardMaterial({ color: isGhost ? 0x888888 : 0xd4af37 }));
+                coneMesh.position.y = 1.75;
+
+                let sidePointer = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 0.15), mainMat);
+                sidePointer.position.set(0.3, 1.2, 0);
+
+                arrowGroup.add(stemMesh, coneMesh, sidePointer);
+                group.add(arrowGroup);
+            }
+            else if (type === 'axes') {
+                // Standalone thick axes
+                group.add(createCoordinateFrame(1.5));
+            }
+            else if (type === 'grid_cube') {
+                let geo = new THREE.BoxGeometry(1.6, 1.6, 1.6);
+                let wireframe = new THREE.WireframeGeometry(geo);
+                let line = new THREE.LineSegments(wireframe, wireMat);
+                group.add(line);
+            }
+            else if (type === 'teapot') {
+                // Simplified Teapot-like shape using TorusKnot for interesting asymmetry
+                let geo = new THREE.TorusKnotGeometry(0.7, 0.22, 64, 16);
+                let mesh = new THREE.Mesh(geo, mainMat);
+                group.add(mesh);
+            }
+
+            return group;
+        }
+
+        function updateSelectedShape() {
+            state.currentShape = document.getElementById('shape-select').value;
+
+            // Clear old groups
+            while (shapeGroup2.children.length > 0) shapeGroup2.remove(shapeGroup2.children[0]);
+            while (shapeGroup3.children.length > 0) shapeGroup3.remove(shapeGroup3.children[0]);
+            while (ghostGroup3.children.length > 0) ghostGroup3.remove(ghostGroup3.children[0]);
+
+            // Add new shape instances
+            shapeGroup2.add(createShapeGeometry(state.currentShape, false));
+            shapeGroup3.add(createShapeGeometry(state.currentShape, false));
+            ghostGroup3.add(createShapeGeometry(state.currentShape, true));
+
+            updateTransforms();
+        }
+
+        // --- UPDATE TRANSFORMATIONS AND MATH READOUTS ---
+        function updateTransforms() {
+            let a = getA();
+            let aNorm = a.norm();
+            let uA = a.normalize();
+
+            // Vector part v = (q1, q2, q3)
+            let v = new THREE.Vector3(state.q1, state.q2, state.q3);
+            let vLen = v.length();
+
+            // 1. Update Panel 1 Controls & Visuals
+            if (vLen > 1e-5) {
+                vecArrowMesh.visible = true;
+                rotationAxisLine.visible = true;
+                vecArrowMesh.setDirection(v.clone().normalize());
+                vecArrowMesh.setLength(vLen, Math.min(0.3, vLen*0.4), Math.min(0.2, vLen*0.3));
+
+                // Align axis line
+                let axisDir = v.clone().normalize();
+                let axisRot = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), axisDir);
+                rotationAxisLine.setRotationFromQuaternion(axisRot);
+            } else {
+                vecArrowMesh.visible = false;
+                rotationAxisLine.visible = false;
+            }
+
+            // 2. Apply Conjugation Action to Panel 3 Object
+            // The action x -> a x a^-1 is a rotation by the 3D unit quaternion of a
+            let threeQuat = uA.toThreeQuaternion();
+            shapeGroup3.setRotationFromQuaternion(threeQuat);
+
+            // Toggle Ghost Visibility
+            ghostGroup3.visible = state.showGhost;
+
+            // 3. Update Text/Math Readout
+            document.getElementById('disp-q0').innerText = state.q0.toFixed(2);
+            document.getElementById('input-q1').value = state.q1;
+            document.getElementById('input-q2').value = state.q2;
+            document.getElementById('input-q3').value = state.q3;
+
+            // Mathematical properties
+            document.getElementById('math-q-full').innerText = 
+                `a = ${state.q0.toFixed(2)} ${state.q1 >= 0 ? '+' : '-'} ${Math.abs(state.q1).toFixed(2)}i ${state.q2 >= 0 ? '+' : '-'} ${Math.abs(state.q2).toFixed(2)}j ${state.q3 >= 0 ? '+' : '-'} ${Math.abs(state.q3).toFixed(2)}k`;
+            
+            document.getElementById('math-q-norm').innerText = aNorm.toFixed(3);
+
+            document.getElementById('math-q-unit').innerText = 
+                `â = ${uA.w.toFixed(3)} ${uA.x >= 0 ? '+' : '-'} ${Math.abs(uA.x).toFixed(3)}i ${uA.y >= 0 ? '+' : '-'} ${Math.abs(uA.y).toFixed(3)}j ${uA.z >= 0 ? '+' : '-'} ${Math.abs(uA.z).toFixed(3)}k`;
+
+            // Calculate rotation angle theta: cos(theta/2) = q0 / ||a||
+            let cosHalfTheta = Math.max(-1, Math.min(1, uA.w));
+            let halfTheta = Math.acos(cosHalfTheta);
+            let thetaDeg = (2 * halfTheta * 180 / Math.PI).toFixed(1);
+
+            document.getElementById('math-q-angle').innerText = `${thetaDeg}° (${(2 * halfTheta).toFixed(2)} rad)`;
+
+            let axisVecStr = vLen > 1e-4 ? 
+                `(${ (uA.x / Math.sin(halfTheta || 1)).toFixed(2) }, ${ (uA.y / Math.sin(halfTheta || 1)).toFixed(2) }, ${ (uA.z / Math.sin(halfTheta || 1)).toFixed(2) })` : 
+                `Undefined (Zero Vector)`;
+            
+            document.getElementById('math-q-axis').innerText = axisVecStr;
+
+            // Refresh MathJax formatting if available
+            if (window.MathJax && window.MathJax.Hub) {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, "math-readout-a"]);
+            }
+        }
+
+        // --- EVENT LISTENERS & UI HANDLERS ---
+        function setupEventListeners() {
+            // Slider for q0
+            const sliderQ0 = document.getElementById('slider-q0');
+            sliderQ0.addEventListener('input', (e) => {
+                state.q0 = parseFloat(e.target.value);
+                updateTransforms();
+            });
+
+            // Input fields for vector parts
+            ['q1', 'q2', 'q3'].forEach(comp => {
+                document.getElementById(`input-${comp}`).addEventListener('input', (e) => {
+                    let val = parseFloat(e.target.value);
+                    if (!isNaN(val)) {
+                        state[comp] = val;
+                        updateTransforms();
+                    }
+                });
+            });
+
+            // Shape Selector
+            document.getElementById('shape-select').addEventListener('change', updateSelectedShape);
+
+            // Sync Cameras Checkbox
+            document.getElementById('sync-cameras').addEventListener('change', (e) => {
+                state.syncCameras = e.target.checked;
+                if (state.syncCameras) {
+                    syncCam(camera1, [camera2, camera3]);
+                }
+            });
+
+            // Show Ghost Checkbox
+            document.getElementById('show-ghost').addEventListener('change', (e) => {
+                state.showGhost = e.target.checked;
+                updateTransforms();
+            });
+
+            // Reset Button
+            document.getElementById('btn-reset').addEventListener('click', () => {
+                state.q0 = 1.0;
+                state.q1 = 0.0;
+                state.q2 = 1.0;
+                state.q3 = 0.0;
+                sliderQ0.value = 1.0;
+                updateTransforms();
+            });
+
+            // Animation Toggle
+            const animBtn = document.getElementById('btn-animate');
+            animBtn.addEventListener('click', () => {
+                state.animating = !state.animating;
+                if (state.animating) {
+                    animBtn.style.backgroundColor = '#d9534f';
+                    document.getElementById('anim-icon').innerText = '❚❚';
+                } else {
+                    animBtn.style.backgroundColor = 'var(--forest-green)';
+                    document.getElementById('anim-icon').innerText = '▶';
+                }
+            });
+        }
+
+        function onWindowResize() {
+            const panels = [
+                { el: document.getElementById('canvas-panel1'), cam: camera1, ren: renderer1 },
+                { el: document.getElementById('canvas-panel2'), cam: camera2, ren: renderer2 },
+                { el: document.getElementById('canvas-panel3'), cam: camera3, ren: renderer3 }
+            ];
+
+            panels.forEach(p => {
+                if (p.el) {
+                    let w = p.el.clientWidth;
+                    let h = p.el.clientHeight;
+                    p.cam.aspect = w / h;
+                    p.cam.updateProjectionMatrix();
+                    p.ren.setSize(w, h);
+                }
+            });
+        }
+
+        // --- ANIMATION LOOP ---
+        let clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            let delta = clock.getDelta();
+
+            // Handle continuous quaternion rotation animation if enabled
+            if (state.animating) {
+                // Rotate vector part continuous around an axis or increment angle
+                let currentA = getA().normalize();
+                // Create a small incremental rotation quaternion dQ
+                let dAngle = delta * 1.5; // rad/sec
+                let rotAxis = new THREE.Vector3(state.q1, state.q2, state.q3).normalize();
+                if (rotAxis.length() < 1e-3) rotAxis.set(0, 1, 0);
+
+                // Increment real part / vector ratio dynamically
+                let angle = Math.atan2(new THREE.Vector3(state.q1, state.q2, state.q3).length(), state.q0) + dAngle;
+                state.q0 = Math.cos(angle);
+                let sinA = Math.sin(angle);
+                state.q1 = rotAxis.x * sinA;
+                state.q2 = rotAxis.y * sinA;
+                state.q3 = rotAxis.z * sinA;
+
+                document.getElementById('slider-q0').value = state.q0;
+                updateTransforms();
+            }
+
+            // Update OrbitControls
+            controls1.update();
+            controls2.update();
+            controls3.update();
+
+            // Render all 3 viewports
+            renderer1.render(scene1, camera1);
+            renderer2.render(scene2, camera2);
+            renderer3.render(scene3, camera3);
+        }
+
+        // --- INITIALIZATION ENTRY POINT ---
+        window.onload = function() {
+            initScenes();
+            setupEventListeners();
+            updateTransforms();
+            animate();
+        };
+    </script>
+</body>
+</html>
